@@ -2,15 +2,25 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
 <title>SPEED OF LOVE · 3D Hot Wheels Experience</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
-  html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family:'Orbitron', sans-serif; color:#fff; }
+  * { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
+  html, body {
+    width:100%; height:100%; overflow:hidden; background:#000;
+    font-family:'Orbitron', sans-serif; color:#fff;
+    touch-action:none;
+    -webkit-user-select:none;
+    -webkit-touch-callout:none;
+  }
   #scene-container { position:fixed; inset:0; z-index:1; }
+  #scene-container canvas { display:block; width:100% !important; height:100% !important; }
 
   .vignette { position:fixed; inset:0; z-index:2; pointer-events:none;
     background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%); mix-blend-mode:multiply; }
@@ -23,51 +33,55 @@
   .phase { position:fixed; inset:0; z-index:10;
     display:flex; flex-direction:column; justify-content:center; align-items:center;
     transition:opacity 0.6s ease, visibility 0.6s;
-    background:rgba(0,0,0,0.55); backdrop-filter: blur(4px); }
+    background:rgba(0,0,0,0.55);
+    padding:1rem;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
   .phase.hidden { opacity:0; visibility:hidden; pointer-events:none; }
 
   #phase1 { background:radial-gradient(ellipse at center, rgba(0,0,0,0.3), rgba(0,0,0,0.9)); }
-  #phase1 h1 { font-size:clamp(2.5rem, 7vw, 5.5rem); font-weight:900; letter-spacing:0.15em;
+  #phase1 h1 { font-size:clamp(2rem, 10vw, 5.5rem); font-weight:900; letter-spacing:0.12em;
     background:linear-gradient(90deg, #ff7b00, #ffcc00, #00c8ff, #ff7b00);
     background-size:300% 100%; -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color:transparent;
     filter:drop-shadow(0 0 25px rgba(255,120,0,0.9));
     animation:gradientMove 4s linear infinite; text-align:center; }
   @keyframes gradientMove { 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
-  #phase1 .subtitle { font-size:clamp(0.9rem, 1.4vw, 1.3rem); color:#ddd; letter-spacing:0.3em;
-    margin-top:1rem; margin-bottom:3.5rem; text-transform:uppercase; text-shadow:0 0 15px #ff7700; }
-  .main-car-icon { font-size:clamp(4rem, 9vw, 8rem); margin-bottom:2rem;
+  #phase1 .subtitle { font-size:clamp(0.7rem, 3vw, 1.3rem); color:#ddd; letter-spacing:0.2em;
+    margin-top:1rem; margin-bottom:2.5rem; text-transform:uppercase; text-shadow:0 0 15px #ff7700;
+    text-align:center; padding:0 1rem; }
+  .main-car-icon { font-size:clamp(3rem, 15vw, 8rem); margin-bottom:1.5rem;
     animation:sway 2s infinite ease-in-out; filter:drop-shadow(0 0 30px #ff9900); }
   @keyframes sway { 0%,100% { transform:translateX(-10px) rotate(-1deg); } 50% { transform:translateX(10px) rotate(1deg); } }
-  .start-btn { padding:1.2rem 3.5rem; font-family:'Orbitron', sans-serif; font-size:clamp(1rem,1.6vw,1.6rem); font-weight:900;
-    letter-spacing:0.2em; text-transform:uppercase; cursor:pointer; color:#000;
+  .start-btn { padding:1.2rem 2.5rem; font-family:'Orbitron', sans-serif; font-size:clamp(0.9rem,4vw,1.6rem); font-weight:900;
+    letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; color:#000;
     border:2px solid #ffcc00; border-radius:60px;
     background:linear-gradient(45deg, #ff4500, #ffaa00);
     box-shadow:0 0 30px #ff6600, 0 0 60px #ff4500, inset 0 0 20px rgba(255,255,255,0.4);
-    transition:transform 0.15s; animation:btnPulse 1.4s infinite alternate; }
+    transition:transform 0.15s; animation:btnPulse 1.4s infinite alternate;
+    touch-action:manipulation; }
   .start-btn:hover { transform:scale(1.06); }
   .start-btn:active { transform:scale(0.95); }
   @keyframes btnPulse { from { box-shadow:0 0 20px #ff6600, 0 0 40px #ff4500; }
     to { box-shadow:0 0 45px #ffcc00, 0 0 90px #ff6600; } }
 
-  #phase2 h2 { font-size:clamp(1.8rem, 4vw, 3rem); color:#ffaa00; letter-spacing:0.2em;
-    text-shadow:0 0 30px #ff5500; margin-bottom:0.6rem; }
-  #phase2 .garage-sub { font-size:0.8rem; color:#888; letter-spacing:0.25em;
-    margin-bottom:1.2rem; text-transform:uppercase; }
+  #phase2 h2 { font-size:clamp(1.5rem, 7vw, 3rem); color:#ffaa00; letter-spacing:0.15em;
+    text-shadow:0 0 30px #ff5500; margin-bottom:0.6rem; text-align:center; }
+  #phase2 .garage-sub { font-size:clamp(0.6rem, 2.5vw, 0.8rem); color:#888; letter-spacing:0.2em;
+    margin-bottom:1rem; text-transform:uppercase; text-align:center; }
 
-  .garage-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:1.2rem;
-    padding:0 2rem 2rem; max-width:1250px; max-height:68vh; overflow-y:auto;
-    scrollbar-width:thin; scrollbar-color:#ff7700 #111; }
-  .garage-grid::-webkit-scrollbar { width:8px; }
-  .garage-grid::-webkit-scrollbar-track { background:#111; border-radius:4px; }
-  .garage-grid::-webkit-scrollbar-thumb { background:linear-gradient(180deg,#ff7700,#ffaa00); border-radius:4px; }
+  .garage-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:1rem;
+    padding:0 1rem 2rem; max-width:1250px; width:100%; }
 
-  .car-card { width:190px; padding:0.9rem 0.7rem; border-radius:20px;
+  .car-card { width:clamp(140px, 44vw, 200px); padding:0.8rem 0.6rem; border-radius:20px;
     background:linear-gradient(160deg, #141414, #050505);
     border:2px solid #333; cursor:pointer;
     display:flex; flex-direction:column; align-items:center; text-align:center;
-    transition:transform 0.35s cubic-bezier(.2,.9,.3,1.4), box-shadow 0.3s, border-color 0.3s;
-    position:relative; overflow:hidden; }
+    transition:transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    position:relative; overflow:hidden;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent; }
   .car-card::before { content:''; position:absolute; inset:-2px; border-radius:20px;
     padding:2px; background:linear-gradient(120deg, transparent, currentColor, transparent);
     -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -75,62 +89,70 @@
   .car-card:hover::before { opacity:1; }
   .car-card:hover { transform:translateY(-10px) scale(1.03);
     box-shadow:0 20px 40px -12px currentColor, 0 0 40px -5px currentColor; }
+  .car-card:active { transform:scale(0.96); }
   .car-card .preview-box {
-    width:100%; height:95px; margin-bottom:0.5rem;
+    width:100%; height:clamp(70px, 22vw, 95px); margin-bottom:0.4rem;
     display:flex; align-items:center; justify-content:center;
     background:radial-gradient(ellipse at center, rgba(255,255,255,0.06), transparent 70%);
     border-radius:14px;
   }
   .car-card .preview-box canvas { width:100%; height:100%; display:block; }
-  .car-card h3 { font-size:0.95rem; margin-bottom:0.2rem; color:#fff; letter-spacing:0.06em; }
-  .car-card p { font-size:0.6rem; color:#aaa; line-height:1.3; letter-spacing:0.02em; }
-  .car-card .glb-name { font-size:0.5rem; color:#555; margin-top:0.3rem; font-family:monospace; }
+  .car-card h3 { font-size:clamp(0.7rem, 3vw, 0.95rem); margin-bottom:0.2rem; color:#fff; letter-spacing:0.05em; }
+  .car-card p { font-size:clamp(0.5rem, 2vw, 0.6rem); color:#aaa; line-height:1.3; letter-spacing:0.02em; }
+  .car-card .glb-name { font-size:clamp(0.4rem, 1.6vw, 0.5rem); color:#555; margin-top:0.3rem; font-family:monospace; }
 
   #phase3 { background:transparent; backdrop-filter:none;
-    justify-content:flex-start; padding-top:5vh; pointer-events:none; opacity:1; }
+    justify-content:flex-start; padding:0; padding-top:3vh; pointer-events:none; opacity:1; }
   #phase3.hidden { opacity:0; visibility:hidden; }
   .hud-top { display:flex; justify-content:space-between; align-items:center;
-    width:90%; max-width:1100px; pointer-events:none; }
-  .hud-lap { font-size:1.1rem; letter-spacing:0.22em; color:#ffaa00;
-    text-shadow:0 0 15px #ff5500; background:rgba(0,0,0,0.4);
-    padding:0.5rem 1.2rem; border-radius:40px; border:1px solid #ff7700aa; }
-  .hud-speed { font-size:1.1rem; letter-spacing:0.18em; color:#00e0ff;
-    text-shadow:0 0 15px #00aaff; background:rgba(0,0,0,0.4);
-    padding:0.5rem 1.2rem; border-radius:40px; border:1px solid #00aaffaa; }
-  .race-subtitle-wrap { position:absolute; top:24%; left:0; right:0;
-    display:flex; justify-content:center; pointer-events:none; padding:0 1rem; }
-  .race-subtitle { font-size:clamp(1.1rem, 2.6vw, 2.2rem); font-weight:900; letter-spacing:0.04em;
-    text-align:center; padding:0.7rem 1.8rem; border-radius:60px;
-    background:rgba(0,0,0,0.6); border-left:6px solid #ff7700; border-right:6px solid #ff7700;
-    white-space:normal; max-width:90vw; line-height:1.2;
+    width:95%; max-width:1100px; pointer-events:none; padding:0 0.5rem; }
+  .hud-lap { font-size:clamp(0.6rem, 2.5vw, 1.1rem); letter-spacing:0.15em; color:#ffaa00;
+    text-shadow:0 0 15px #ff5500; background:rgba(0,0,0,0.5);
+    padding:0.4rem 0.8rem; border-radius:40px; border:1px solid #ff7700aa;
+    white-space:nowrap; }
+  .hud-speed { font-size:clamp(0.6rem, 2.5vw, 1.1rem); letter-spacing:0.12em; color:#00e0ff;
+    text-shadow:0 0 15px #00aaff; background:rgba(0,0,0,0.5);
+    padding:0.4rem 0.8rem; border-radius:40px; border:1px solid #00aaffaa;
+    white-space:nowrap; }
+  .race-subtitle-wrap { position:absolute; top:22%; left:0; right:0;
+    display:flex; justify-content:center; pointer-events:none; padding:0 0.8rem; }
+  .race-subtitle { font-size:clamp(0.9rem, 4vw, 2.2rem); font-weight:900; letter-spacing:0.02em;
+    text-align:center; padding:0.6rem 1.2rem; border-radius:30px;
+    background:rgba(0,0,0,0.7); border-left:5px solid #ff7700; border-right:5px solid #ff7700;
+    white-space:normal; max-width:95vw; line-height:1.25;
     animation:subtitlePop 0.5s ease-out; opacity:0; transition:opacity 0.3s; }
   .race-subtitle.visible { opacity:1; }
   @keyframes subtitlePop { 0% { transform:scale(0.4); opacity:0; filter:blur(8px); }
     70% { transform:scale(1.08); opacity:1; filter:blur(0); } 100% { transform:scale(1); } }
-  .race-progress-wrap { position:absolute; bottom:6vh; left:50%; transform:translateX(-50%);
-    width:70%; max-width:700px; height:10px; border-radius:10px;
+  .race-progress-wrap { position:absolute; bottom:5vh; left:50%; transform:translateX(-50%);
+    width:80%; max-width:700px; height:8px; border-radius:8px;
     background:rgba(255,255,255,0.12); overflow:hidden; border:1px solid #ff770055; }
   .race-progress { height:100%; width:0%;
     background:linear-gradient(90deg, #ff7700, #ffcc00);
     box-shadow:0 0 20px #ffaa00, 0 0 40px #ff6600; transition:width 0.2s linear; }
 
-  #phase4 { background:rgba(0,0,0,0.75); backdrop-filter:blur(10px); }
-  .letter-card { width:min(640px, 92vw); padding:2.6rem 2.4rem; border-radius:32px;
+  #phase4 { background:rgba(0,0,0,0.8); }
+  .letter-card { width:min(92vw, 640px); padding:clamp(1.5rem, 5vw, 2.6rem); border-radius:24px;
     background:linear-gradient(160deg, #121212, #050505);
     border:3px solid #ffaa00; text-align:center;
     animation:cardIn 0.7s cubic-bezier(.2,.9,.3,1.3); position:relative;
-    max-height:85vh; overflow-y:auto; }
+    max-height:90vh; overflow-y:auto;
+    -webkit-overflow-scrolling:touch; }
   @keyframes cardIn { 0% { transform:scale(0.6) translateY(40px) rotateX(15deg); opacity:0; }
     100% { transform:scale(1) translateY(0) rotateX(0); opacity:1; } }
-  .letter-card h2 { font-size:clamp(1.3rem, 2.6vw, 2rem); margin-bottom:1.4rem; letter-spacing:0.08em;
+  .letter-card h2 { font-size:clamp(1rem, 4vw, 2rem); margin-bottom:1rem; letter-spacing:0.05em;
     text-shadow:0 0 20px currentColor; }
-  .letter-card p { font-size:clamp(0.9rem, 1.4vw, 1.1rem); line-height:1.7; color:#ddd;
-    margin-bottom:2.2rem; font-weight:400; letter-spacing:0.03em; }
-  .letter-buttons { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
-  .letter-buttons button { font-family:'Orbitron', sans-serif; font-size:1rem; font-weight:700; letter-spacing:0.1em;
-    padding:0.85rem 1.8rem; border-radius:50px; cursor:pointer;
-    background:transparent; color:#fff; border:2px solid #666; transition:all 0.25s; }
+  .letter-card p { font-size:clamp(0.75rem, 3vw, 1.1rem); line-height:1.6; color:#ddd;
+    margin-bottom:1.5rem; font-weight:400; letter-spacing:0.02em; }
+  .letter-buttons { display:flex; gap:0.8rem; justify-content:center; flex-wrap:wrap; }
+  .letter-buttons button { font-family:'Orbitron', sans-serif; font-size:clamp(0.7rem, 3vw, 1rem); font-weight:700;
+    letter-spacing:0.05em;
+    padding:0.7rem 1.4rem; border-radius:50px; cursor:pointer;
+    background:transparent; color:#fff; border:2px solid #666; transition:all 0.25s;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent; }
   .letter-buttons button:hover { transform:translateY(-3px); }
+  .letter-buttons button:active { transform:scale(0.95); }
   .letter-buttons .repeat-btn { border-color:#ffaa00; color:#ffaa00; }
   .letter-buttons .repeat-btn:hover { box-shadow:0 0 30px #ffaa00; background:rgba(255,170,0,0.1); }
   .letter-buttons .garage-btn { border-color:#00c8ff; color:#00c8ff; }
@@ -138,22 +160,35 @@
 
   #loader { position:fixed; inset:0; z-index:200; background:#000;
     display:flex; justify-content:center; align-items:center; flex-direction:column; gap:1rem;
-    transition:opacity 0.6s; }
+    transition:opacity 0.6s; padding:2rem; text-align:center; }
   #loader.hidden { opacity:0; pointer-events:none; }
-  .spinner { width:60px; height:60px; border-radius:50%; border:4px solid #222;
+  .spinner { width:50px; height:50px; border-radius:50%; border:4px solid #222;
     border-top-color:#ff7700; animation:spin 1s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
-  #loader p { color:#ffaa00; letter-spacing:0.3em; font-size:0.9rem; }
-  #loader .progress-text { color:#888; font-size:0.7rem; letter-spacing:0.2em; }
-  .progress-bar-wrap { width:min(400px, 80vw); height:6px; background:#222; border-radius:3px; overflow:hidden; }
+  #loader p { color:#ffaa00; letter-spacing:0.2em; font-size:clamp(0.7rem, 3vw, 0.9rem); }
+  #loader .progress-text { color:#888; font-size:0.7rem; letter-spacing:0.15em; }
+  #loader .device-info { color:#555; font-size:0.6rem; letter-spacing:0.1em; margin-top:0.5rem; }
+  .progress-bar-wrap { width:min(300px, 80vw); height:6px; background:#222; border-radius:3px; overflow:hidden; }
   .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#ff7700,#ffcc00);
     box-shadow:0 0 12px #ffaa00; transition:width 0.2s; }
 
-  .skip-btn { position:fixed; bottom:20px; right:20px; z-index:50;
-    background:rgba(0,0,0,0.6); color:#ffaa00; border:1px solid #ff7700;
-    font-family:'Orbitron', sans-serif; padding:0.5rem 1rem; border-radius:40px; cursor:pointer;
-    font-size:0.8rem; letter-spacing:0.15em; opacity:0; transition:opacity 0.3s; }
+  .skip-btn { position:fixed; bottom:15px; right:15px; z-index:50;
+    background:rgba(0,0,0,0.7); color:#ffaa00; border:1px solid #ff7700;
+    font-family:'Orbitron', sans-serif; padding:0.5rem 0.9rem; border-radius:40px; cursor:pointer;
+    font-size:clamp(0.6rem, 2.5vw, 0.8rem); letter-spacing:0.1em; opacity:0; transition:opacity 0.3s;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent; }
   .skip-btn.show { opacity:1; }
+  .skip-btn:active { transform:scale(0.95); }
+
+  .rotate-hint {
+    position:fixed; bottom:10px; left:50%; transform:translateX(-50%);
+    color:#ffaa00; font-size:0.6rem; letter-spacing:0.15em;
+    background:rgba(0,0,0,0.7); padding:0.3rem 0.8rem; border-radius:20px;
+    border:1px solid #ff770055; z-index:40;
+    opacity:0; transition:opacity 0.3s; pointer-events:none;
+  }
+  .rotate-hint.show { opacity:1; }
 </style>
 </head>
 <body>
@@ -167,6 +202,7 @@
     <p>CARGANDO MODELOS 3D...</p>
     <div class="progress-bar-wrap"><div class="progress-bar" id="loadProgress"></div></div>
     <div class="progress-text" id="loadText">0%</div>
+    <div class="device-info" id="deviceInfo">Detectando dispositivo...</div>
   </div>
 
   <div id="phase1" class="phase">
@@ -206,7 +242,8 @@
     </div>
   </div>
 
-  <button id="skipBtn" class="skip-btn">Saltar carrera ⏭</button>
+  <button id="skipBtn" class="skip-btn">Saltar ⏭</button>
+  <div class="rotate-hint" id="rotateHint">📱 Gira el teléfono</div>
 
   <script type="importmap">
   {
@@ -226,7 +263,35 @@
     import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
     // ========================================================
-    // 🚗  LOS 10 COCHES
+    // 📱 DETECCIÓN DE DISPOSITIVO Y AJUSTES RESPONSIVE
+    // ========================================================
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                     || (window.innerWidth < 768);
+    const isLowPower = isMobile && window.innerWidth < 500;
+    const isTablet = !isMobile && window.innerWidth < 1024;
+
+    const SETTINGS = {
+      pixelRatio: isMobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2),
+      shadowsEnabled: !isMobile,
+      bloomStrength: isMobile ? 0.5 : 0.9,
+      segmentCount: isMobile ? 300 : (isTablet ? 450 : 600),
+      starCount: isMobile ? 400 : (isTablet ? 700 : 1000),
+      sparkPoolSize: isMobile ? 40 : 120,
+      targetLength: isMobile ? 4.5 : 5.0,
+      phraseDuration: isMobile ? 4.0 : 4.5,
+      targetSpeed: isMobile ? 1/22 : 1/24,
+      previewSize: isMobile ? 200 : 300,
+      previewHeight: isMobile ? 100 : 150,
+      camDist: isMobile ? 12 : 11,
+      camHeight: isMobile ? 6 : 5.5
+    };
+
+    document.getElementById('deviceInfo').textContent =
+      isMobile ? (isLowPower ? 'Modo móvil (baja potencia)' : 'Modo móvil') :
+      isTablet ? 'Modo tablet' : 'Modo escritorio';
+
+    // ========================================================
+    // 🚗  TUS 9 COCHES
     // ========================================================
     const CARS = [
       { id: 'raptor', file: 'raptor.glb', name: 'FORD F-150 RAPTOR', desc: 'Camioneta Todoterreno · Un amor que lo supera todo', color: 0xffffff, rotationY: Math.PI,
@@ -253,101 +318,125 @@
       { id: 'r8', file: 'r8.glb', name: 'R8', desc: 'Deportivo Plata · Elegancia pura', color: 0xb8c4cc, rotationY: Math.PI,
         phrases: ["Ese plateado te hace ver como sacado de una película 🎬","Eres mi protagonista favorito, mi estrella, mi todo.","Me encanta cómo me miras cuando crees que estoy distraída.","Contigo hasta el silencio se siente elegante.","Si el amor tuviera clase, sería exactamente este momento.","Eres mi persona favorita, mi lujo más bonito.","Llegamos, pero yo quiero seguir siendo tu copiloto siempre. 🩶"],
         letterTitle: "R8 · Elegancia pura", letterBody: "Dicen que la elegancia no se compra, se lleva. Y tú la llevas con una naturalidad que me enamora cada día. Eres mi protagonista favorito, mi estrella de cine, mi todo. Me encanta cómo me tratas, cómo me cuidas, cómo me haces sentir la mujer más especial del mundo. Contigo hasta el silencio se siente elegante. Gracias por cada detalle, por cada gesto, por cada momento. Te amo. 🩶" },
-      ];
+    ];
 
     // ============ AUDIO ============
     let audioCtx = null;
     function initAudio() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch(e) { return; }
+      }
       if (audioCtx.state === 'suspended') audioCtx.resume();
     }
     function playEngine() {
       if (!audioCtx) return;
-      const now = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(80, now);
-      osc.frequency.linearRampToValueAtTime(240, now + 0.5);
-      osc.frequency.linearRampToValueAtTime(130, now + 1.0);
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.linearRampToValueAtTime(0.25, now + 0.2);
-      gain.gain.linearRampToValueAtTime(0, now + 1.2);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(now); osc.stop(now + 1.2);
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(80, now);
+        osc.frequency.linearRampToValueAtTime(240, now + 0.5);
+        osc.frequency.linearRampToValueAtTime(130, now + 1.0);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0.2, now + 0.2);
+        gain.gain.linearRampToValueAtTime(0, now + 1.2);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(now); osc.stop(now + 1.2);
+      } catch(e) {}
     }
     function playScreech() {
       if (!audioCtx) return;
-      const now = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(900, now);
-      osc.frequency.exponentialRampToValueAtTime(280, now + 0.5);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.6);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(now); osc.stop(now + 0.6);
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(900, now);
+        osc.frequency.exponentialRampToValueAtTime(280, now + 0.5);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.6);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(now); osc.stop(now + 0.6);
+      } catch(e) {}
     }
     function playBlip() {
       if (!audioCtx) return;
-      const now = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(660, now);
-      osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.linearRampToValueAtTime(0, now + 0.15);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(now); osc.stop(now + 0.15);
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(660, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.15);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(now); osc.stop(now + 0.15);
+      } catch(e) {}
     }
 
     // ============ THREE.JS SETUP ============
     const container = document.getElementById('scene-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x05050a);
-    scene.fog = new THREE.FogExp2(0x05050a, 0.0085);
+    scene.fog = new THREE.FogExp2(0x05050a, isMobile ? 0.012 : 0.0085);
 
     const camera = new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 800);
-    const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: !isMobile,
+      powerPreference: 'high-performance',
+      alpha: false,
+      stencil: false
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(SETTINGS.pixelRatio);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.enabled = SETTINGS.shadowsEnabled;
+    if (SETTINGS.shadowsEnabled) {
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    }
     container.appendChild(renderer.domElement);
 
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.9, 0.6, 0.2);
+    const bloom = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      SETTINGS.bloomStrength,
+      isMobile ? 0.4 : 0.6,
+      isMobile ? 0.3 : 0.2
+    );
     composer.addPass(bloom);
 
-    scene.add(new THREE.AmbientLight(0x334455, 1.1));
-    scene.add(new THREE.HemisphereLight(0x0099ff, 0xff4400, 0.9));
+    scene.add(new THREE.AmbientLight(0x334455, isMobile ? 1.3 : 1.1));
+    scene.add(new THREE.HemisphereLight(0x0099ff, 0xff4400, 1.0));
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
     dirLight.position.set(20, 40, 20);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.set(1024,1024);
-    dirLight.shadow.camera.left = -50;
-    dirLight.shadow.camera.right = 50;
-    dirLight.shadow.camera.top = 50;
-    dirLight.shadow.camera.bottom = -50;
+    if (SETTINGS.shadowsEnabled) {
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.set(512, 512);
+      dirLight.shadow.camera.left = -30;
+      dirLight.shadow.camera.right = 30;
+      dirLight.shadow.camera.top = 30;
+      dirLight.shadow.camera.bottom = -30;
+    }
     scene.add(dirLight);
 
+    const neonLightCount = isMobile ? 3 : 6;
     const neonLights = [];
-    for (let i = 0; i < 6; i++) {
-      const pl = new THREE.PointLight(i%2===0 ? 0xff7700 : 0x00c8ff, 3, 60, 2);
+    for (let i = 0; i < neonLightCount; i++) {
+      const pl = new THREE.PointLight(i%2===0 ? 0xff7700 : 0x00c8ff, isMobile ? 2 : 3, 60, 2);
       scene.add(pl);
       neonLights.push(pl);
     }
 
     // ========================================================
-    // 🛣️  PISTA TOTALMENTE RECTA
+    // 🛣️  PISTA RECTA
     // ========================================================
-    // Solo una línea recta en el eje Z. Sin curvas, sin nada.
     const TRACK_LENGTH = 800;
     const trackCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(0, 0, 0),
@@ -358,7 +447,7 @@
     ], false, 'catmullrom', 0.5);
 
     const trackWidth = 13;
-    const N = 600;
+    const N = SETTINGS.segmentCount;
     const trackGeo = new THREE.BufferGeometry();
     const positions = [];
     const indices = [];
@@ -394,21 +483,21 @@
       emissive: 0x221100, emissiveIntensity: 0.3
     });
     const trackMesh = new THREE.Mesh(trackGeo, trackMat);
-    trackMesh.receiveShadow = true;
+    if (SETTINGS.shadowsEnabled) trackMesh.receiveShadow = true;
     scene.add(trackMesh);
 
-    // Rieles de neón laterales (rectos)
     function createNeonRail(offset) {
       const railPoints = [];
-      for (let i = 0; i <= 300; i++) {
-        const t = i / 300;
+      const railSegments = isMobile ? 100 : 300;
+      for (let i = 0; i <= railSegments; i++) {
+        const t = i / railSegments;
         const p = trackCurve.getPointAt(t, new THREE.Vector3());
         const tg = trackCurve.getTangentAt(t, new THREE.Vector3()).normalize();
         const sd = new THREE.Vector3().crossVectors(tg, new THREE.Vector3(0,1,0)).normalize().multiplyScalar(offset);
         railPoints.push(new THREE.Vector3(p.x + sd.x, 0.15, p.z + sd.z));
       }
       const railCurve = new THREE.CatmullRomCurve3(railPoints, false);
-      const railGeo = new THREE.TubeGeometry(railCurve, 300, 0.2, 8, false);
+      const railGeo = new THREE.TubeGeometry(railCurve, railSegments, 0.2, isMobile ? 4 : 8, false);
       const railMat = new THREE.MeshStandardMaterial({
         color: offset > 0 ? 0x00c8ff : 0xff7700,
         emissive: offset > 0 ? 0x00c8ff : 0xff7700,
@@ -419,12 +508,12 @@
     scene.add(createNeonRail(trackWidth/2 + 0.2));
     scene.add(createNeonRail(-trackWidth/2 - 0.2));
 
-    // Línea central discontinua recta
     const centerLineGeo = new THREE.BufferGeometry();
     const centerPositions = [];
-    for (let i = 0; i < 1200; i++) {
+    const centerSegs = isMobile ? 400 : 1200;
+    for (let i = 0; i < centerSegs; i++) {
       if (i % 8 < 4) {
-        const t1 = i/1200, t2 = (i+1)/1200;
+        const t1 = i/centerSegs, t2 = (i+1)/centerSegs;
         const p1 = trackCurve.getPointAt(t1, new THREE.Vector3());
         const p2 = trackCurve.getPointAt(t2, new THREE.Vector3());
         centerPositions.push(p1.x, 0.05, p1.z, p2.x, 0.05, p2.z);
@@ -436,7 +525,6 @@
     }));
     scene.add(centerLine);
 
-    // Línea de META al final
     const metaGeo = new THREE.PlaneGeometry(trackWidth + 2, 1.2);
     const metaMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, side: THREE.DoubleSide });
     const metaMesh = new THREE.Mesh(metaGeo, metaMat);
@@ -444,7 +532,6 @@
     metaMesh.position.set(0, 0.06, -TRACK_LENGTH);
     scene.add(metaMesh);
 
-    // Cuadros de meta (checkered)
     const checkerGeo = new THREE.PlaneGeometry(trackWidth + 2, 3);
     const checkerCanvas = document.createElement('canvas');
     checkerCanvas.width = 64;
@@ -463,7 +550,7 @@
     checkerMesh.position.set(0, 0.07, -TRACK_LENGTH + 2);
     scene.add(checkerMesh);
 
-    const grid = new THREE.GridHelper(1400, 140, 0x222222, 0x111111);
+    const grid = new THREE.GridHelper(isMobile ? 600 : 1400, isMobile ? 60 : 140, 0x222222, 0x111111);
     grid.position.y = -0.5;
     grid.position.z = -TRACK_LENGTH / 2;
     scene.add(grid);
@@ -476,7 +563,7 @@
     scene.add(ground);
 
     const starsGeo = new THREE.BufferGeometry();
-    const starCount = 1500;
+    const starCount = SETTINGS.starCount;
     const starPos = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount * 3; i += 3) {
       starPos[i] = (Math.random() - 0.5) * 1500;
@@ -490,7 +577,7 @@
     scene.add(stars);
 
     // ============ LOADER GLB ============
-    const TARGET_LENGTH = 5.0;
+    const TARGET_LENGTH = SETTINGS.targetLength;
 
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
@@ -507,6 +594,10 @@
     const totalToLoad = CARS.length;
 
     function updateLoadProgress() {
+      if (totalToLoad === 0) {
+        loaderEl.classList.add('hidden');
+        return;
+      }
       const pct = Math.round((loadedCount / totalToLoad) * 100);
       loadProgressEl.style.width = pct + '%';
       loadTextEl.textContent = pct + '%';
@@ -532,8 +623,10 @@
 
       model.traverse(child => {
         if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
+          if (SETTINGS.shadowsEnabled) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
         }
       });
 
@@ -578,10 +671,19 @@
       });
     }
 
-    Promise.all(CARS.map(car => loadModel(car))).then(() => {
-      console.log('✅ Todos los modelos cargados:', loadedCount);
+    // ✅ Carga en serie (uno por uno) — mejor para móvil
+    async function loadAllModels() {
+      for (const car of CARS) {
+        try {
+          await loadModel(car);
+        } catch(e) {
+          console.warn('Error cargando', car.id, e);
+        }
+      }
+      console.log('✅ Coches cargados:', loadedCount);
       buildGarage();
-    });
+    }
+    loadAllModels();
 
     // ============ CONSTRUIR GARAJE ============
     function buildGarage() {
@@ -614,10 +716,13 @@
         glbName.textContent = car.file;
         card.appendChild(glbName);
 
-        card.addEventListener('click', () => {
+        const handleSelect = (e) => {
+          e.preventDefault();
           initAudio();
           startRace(car.id);
-        });
+        };
+        card.addEventListener('click', handleSelect);
+        card.addEventListener('touchend', handleSelect, { passive: false });
 
         grid.appendChild(card);
       });
@@ -632,44 +737,54 @@
     }
 
     function generatePreviews() {
-      CARS.forEach(car => {
+      CARS.forEach((car, index) => {
         const previewEl = document.getElementById('preview-' + car.id);
         if (!previewEl) return;
 
-        const canvas = document.createElement('canvas');
-        canvas.width = 300;
-        canvas.height = 150;
-        previewEl.appendChild(canvas);
+        // Escalonar generación en móvil
+        setTimeout(() => {
+          const canvas = document.createElement('canvas');
+          canvas.width = SETTINGS.previewSize;
+          canvas.height = SETTINGS.previewHeight;
+          previewEl.appendChild(canvas);
 
-        const pRenderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
-        pRenderer.setSize(300, 150, false);
-        pRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        pRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-        pRenderer.toneMappingExposure = 1.3;
+          const pRenderer = new THREE.WebGLRenderer({
+            canvas,
+            antialias: false,
+            alpha: true,
+            powerPreference: 'low-power'
+          });
+          pRenderer.setSize(SETTINGS.previewSize, SETTINGS.previewHeight, false);
+          pRenderer.setPixelRatio(1);
+          pRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+          pRenderer.toneMappingExposure = 1.3;
 
-        const pScene = new THREE.Scene();
-        pScene.add(new THREE.AmbientLight(0xffffff, 1.5));
-        const pDir = new THREE.DirectionalLight(0xffffff, 2.2);
-        pDir.position.set(5, 10, 7);
-        pScene.add(pDir);
-        const pLightBack = new THREE.DirectionalLight(car.color, 1.8);
-        pLightBack.position.set(-5, 3, -5);
-        pScene.add(pLightBack);
+          const pScene = new THREE.Scene();
+          pScene.add(new THREE.AmbientLight(0xffffff, 1.5));
+          const pDir = new THREE.DirectionalLight(0xffffff, 2.2);
+          pDir.position.set(5, 10, 7);
+          pScene.add(pDir);
+          const pLightBack = new THREE.DirectionalLight(car.color, 1.8);
+          pLightBack.position.set(-5, 3, -5);
+          pScene.add(pLightBack);
 
-        const pCamera = new THREE.PerspectiveCamera(35, 2, 0.1, 100);
+          const pCamera = new THREE.PerspectiveCamera(35, 2, 0.1, 100);
 
-        const modelClone = cloneModelForScene(modelCache[car.id]);
-        pScene.add(modelClone);
+          const modelClone = cloneModelForScene(modelCache[car.id]);
+          pScene.add(modelClone);
 
-        const box = new THREE.Box3().setFromObject(modelClone);
-        const size = box.getSize(new THREE.Vector3());
-        const center = box.getCenter(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const dist = maxDim * 1.9;
-        pCamera.position.set(center.x + dist * 0.8, center.y + dist * 0.45, center.z + dist * 0.9);
-        pCamera.lookAt(center.x, center.y, center.z);
+          const box = new THREE.Box3().setFromObject(modelClone);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const dist = maxDim * 1.9;
+          pCamera.position.set(center.x + dist * 0.8, center.y + dist * 0.45, center.z + dist * 0.9);
+          pCamera.lookAt(center.x, center.y, center.z);
 
-        pRenderer.render(pScene, pCamera);
+          pRenderer.render(pScene, pCamera);
+
+          setTimeout(() => pRenderer.dispose(), 100);
+        }, isMobile ? index * 250 : index * 80);
       });
     }
 
@@ -678,7 +793,7 @@
     let activeCarType = 'angels';
     let activeCarData = null;
     let carProgress = 0;
-    const TARGET_SPEED = 1 / 24;
+    const TARGET_SPEED = SETTINGS.targetSpeed;
     let currentSpeed = 0;
     let raceActive = false;
     let raceFinished = false;
@@ -687,11 +802,11 @@
     let phraseShown = [];
     let phraseTimer = 0;
     let phraseActive = false;
-    const PHRASE_DURATION = 4.5;
+    const PHRASE_DURATION = SETTINGS.phraseDuration;
 
     const sparkPool = [];
-    const sparkGeometry = new THREE.SphereGeometry(0.12, 6, 6);
-    for (let i = 0; i < 120; i++) {
+    const sparkGeometry = new THREE.SphereGeometry(0.12, isMobile ? 4 : 6, isMobile ? 4 : 6);
+    for (let i = 0; i < SETTINGS.sparkPoolSize; i++) {
       const mat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0 });
       const spark = new THREE.Mesh(sparkGeometry, mat);
       spark.visible = false;
@@ -733,6 +848,7 @@
     const garageBtn = document.getElementById('garageBtn');
     const speedFlash = document.getElementById('speedFlash');
     const skipBtn = document.getElementById('skipBtn');
+    const rotateHint = document.getElementById('rotateHint');
 
     // ============ FUNCIONES ============
     function removeActiveCar() {
@@ -785,12 +901,10 @@
       activeCar = { group: carGroup, wheels };
       scene.add(carGroup);
 
-      // ✅ Posición inicial: al inicio de la pista
       carGroup.position.set(0, 0.1, 0);
-      carGroup.rotation.set(0, 0, 0); // Mirando hacia -Z (el frente del modelo)
+      carGroup.rotation.set(0, 0, 0);
 
-      // ✅ Cámara detrás del coche, mirando hacia -Z
-      camera.position.set(0, 5.5, 11);
+      camera.position.set(0, SETTINGS.camHeight, SETTINGS.camDist);
       camera.lookAt(0, 0.5, -5);
 
       phase1.classList.add('hidden');
@@ -825,7 +939,7 @@
         letterCard.style.boxShadow = `0 0 80px ${colorStr}, 0 0 140px ${colorStr}80`;
         letterTitle.style.color = colorStr;
         letterTitle.style.textShadow = `0 0 20px ${colorStr}`;
-      }, 2000);
+      }, 1800);
     }
 
     function showPhrase(idx) {
@@ -848,9 +962,12 @@
 
     // ============ ANIMACIÓN ============
     const clock = new THREE.Clock();
+    let isPaused = false;
 
     function animate() {
       requestAnimationFrame(animate);
+      if (isPaused) return;
+
       const dt = Math.min(clock.getDelta(), 0.05);
       const time = clock.elapsedTime;
 
@@ -860,7 +977,7 @@
           3 + Math.sin(time * 2 + i) * 1.5,
           -carProgress * TRACK_LENGTH + Math.cos(time * 0.6 + i) * 20
         );
-        l.intensity = 2 + Math.sin(time * 5 + i) * 1.5;
+        l.intensity = (isMobile ? 1.5 : 2) + Math.sin(time * 5 + i) * 1;
       });
       stars.rotation.y += dt * 0.005;
 
@@ -895,12 +1012,10 @@
           }
         }
 
-        // ✅ El coche avanza SOLO en Z (hacia -Z), sin rotación de dirección
         const bump = Math.sin(carProgress * 80) * 0.05;
         activeCar.group.position.x = 0;
         activeCar.group.position.y = 0.1 + bump + Math.sin(time * 55) * 0.015;
         activeCar.group.position.z = -carProgress * TRACK_LENGTH;
-        // Sin rotación: el coche mira siempre hacia -Z (frente del modelo)
         activeCar.group.rotation.set(0, 0, 0);
 
         activeCar.wheels.forEach(w => {
@@ -908,9 +1023,11 @@
         });
 
         if (Math.random() < 0.55) {
-          const backOffset = new THREE.Vector3(0, 0.3, 2.4).applyQuaternion(activeCar.group.quaternion);
-          const sparkPos = activeCar.group.position.clone().add(backOffset);
-          sparkPos.y += Math.random() * 0.3;
+          const sparkPos = new THREE.Vector3(
+            activeCar.group.position.x,
+            activeCar.group.position.y + 0.3,
+            activeCar.group.position.z + 2.4
+          );
           emitSpark(sparkPos);
         }
 
@@ -919,27 +1036,23 @@
         hudSpeed.textContent = displaySpeed + ' KM/H';
 
       } else if (activeCar && raceFinished) {
-        // ✅ Al final el coche gira y derrapa
         activeCar.group.position.y = 0.1 + Math.sin(time * 20) * 0.03;
-        activeCar.group.rotation.y += dt * 0.8; // Gira sobre su eje
+        activeCar.group.rotation.y += dt * 0.8;
         activeCar.wheels.forEach(w => { w.rotation.x += dt * 8; });
         hudSpeed.textContent = '0 KM/H';
       }
 
-      // ✅ Cámara fija detrás del coche, siempre mirando hacia -Z
-      // La cámara sigue la posición del coche pero SIN girar
       if (activeCar) {
         const carPos = activeCar.group.position;
-        // Cámara siempre 10 unidades atrás del coche en Z, 5 de altura
+
         const desiredCamPos = new THREE.Vector3(
-          carPos.x,               // misma X (siempre 0)
-          carPos.y + 5,           // altura constante relativa
-          carPos.z + 10           // 10 unidades detrás
+          carPos.x,
+          carPos.y + SETTINGS.camHeight,
+          carPos.z + SETTINGS.camDist
         );
         const camLerp = 1 - Math.pow(0.001, dt);
         camera.position.lerp(desiredCamPos, camLerp);
 
-        // Mira hacia adelante del coche (hacia -Z)
         const desiredLook = new THREE.Vector3(
           carPos.x,
           carPos.y + 0.8,
@@ -968,27 +1081,34 @@
         }
       });
 
-      bloom.strength = raceActive ? (0.9 + Math.sin(time * 6) * 0.15) : 0.7;
+      bloom.strength = raceActive ? (SETTINGS.bloomStrength + Math.sin(time * 6) * 0.1) : SETTINGS.bloomStrength - 0.2;
 
       composer.render();
     }
     animate();
 
-    // ============ EVENTOS ============
-    startBtn.addEventListener('click', () => {
+    // ============ EVENTOS (con soporte táctil) ============
+    const handleStart = (e) => {
+      e.preventDefault();
       initAudio();
       playEngine();
       speedFlash.classList.add('active');
       setTimeout(() => speedFlash.classList.remove('active'), 500);
       phase1.classList.add('hidden');
       phase2.classList.remove('hidden');
-    });
+    };
+    startBtn.addEventListener('click', handleStart);
+    startBtn.addEventListener('touchend', handleStart, { passive: false });
 
-    repeatBtn.addEventListener('click', () => {
+    const handleRepeat = (e) => {
+      e.preventDefault();
       startRace(activeCarType);
-    });
+    };
+    repeatBtn.addEventListener('click', handleRepeat);
+    repeatBtn.addEventListener('touchend', handleRepeat, { passive: false });
 
-    garageBtn.addEventListener('click', () => {
+    const handleGarage = (e) => {
+      e.preventDefault();
       removeActiveCar();
       raceActive = false;
       raceFinished = false;
@@ -1002,22 +1122,60 @@
       camera.lookAt(0, 0, 0);
       camera.fov = 65;
       camera.updateProjectionMatrix();
-    });
+    };
+    garageBtn.addEventListener('click', handleGarage);
+    garageBtn.addEventListener('touchend', handleGarage, { passive: false });
 
-    skipBtn.addEventListener('click', () => {
+    const handleSkip = (e) => {
+      e.preventDefault();
       if (raceActive) {
         carProgress = 0.99;
         phraseActive = false;
         raceSubtitle.classList.remove('visible');
       }
+    };
+    skipBtn.addEventListener('click', handleSkip);
+    skipBtn.addEventListener('touchend', handleSkip, { passive: false });
+
+    // ✅ Resize con debounce (optimizado para rotación de pantalla)
+    let resizeTimeout;
+    function handleResize() {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+        composer.setSize(w, h);
+
+        if (isMobile && h > w) {
+          rotateHint.classList.add('show');
+        } else {
+          rotateHint.classList.remove('show');
+        }
+      }, 150);
+    }
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
+    if (isMobile && window.innerHeight > window.innerWidth) {
+      rotateHint.classList.add('show');
+      setTimeout(() => rotateHint.classList.remove('show'), 5000);
+    }
+
+    // ✅ Pausar render cuando la pestaña no está visible (ahorra batería en móvil)
+    document.addEventListener('visibilitychange', () => {
+      isPaused = document.hidden;
+      if (!isPaused) clock.getDelta();
     });
 
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      composer.setSize(window.innerWidth, window.innerHeight);
-    });
+    // ✅ Prevenir zoom con gestos en móvil
+    document.addEventListener('gesturestart', (e) => e.preventDefault());
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
   </script>
 </body>
 </html>
