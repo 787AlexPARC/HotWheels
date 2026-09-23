@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPEED OF LOVE · 3D Hot Wheels Experience</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family:'Orbitron', sans-serif; color:#fff; }
+  #scene-container { position:fixed; inset:0; z-index:1; }
+
+  .vignette { position:fixed; inset:0; z-index:2; pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%); mix-blend-mode:multiply; }
+  .speed-flash { position:fixed; inset:0; z-index:60; pointer-events:none;
+    background:radial-gradient(circle, #fff 0%, #ff7700 40%, transparent 70%);
+    opacity:0; transition:opacity 0.15s; }
+  .speed-flash.active { opacity:0.95; animation:flashOut 0.5s forwards; }
+  @keyframes flashOut { 0%{opacity:0.95;} 100%{opacity:0;} }
+
+  .phase { position:fixed; inset:0; z-index:10;
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    transition:opacity 0.6s ease, visibility 0.6s;
+    background:rgba(0,0,0,0.55); backdrop-filter: blur(4px); }
+  .phase.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+
+  #phase1 { background:radial-gradient(ellipse at center, rgba(0,0,0,0.3), rgba(0,0,0,0.9)); }
+  #phase1 h1 { font-size:clamp(2.5rem, 7vw, 5.5rem); font-weight:900; letter-spacing:0.15em;
+    background:linear-gradient(90deg, #ff7b00, #ffcc00, #00c8ff, #ff7b00);
+    background-size:300% 100%; -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 25px rgba(255,120,0,0.9));
+    animation:gradientMove 4s linear infinite; text-align:center; }
+  @keyframes gradientMove { 0%{background-position:0% 50%;} 100%{background-position:300% 50%;} }
+  #phase1 .subtitle { font-size:clamp(0.9rem, 1.4vw, 1.3rem); color:#ddd; letter-spacing:0.3em;
+    margin-top:1rem; margin-bottom:3.5rem; text-transform:uppercase; text-shadow:0 0 15px #ff7700; }
+  .main-car-icon { font-size:clamp(4rem, 9vw, 8rem); margin-bottom:2rem;
+    animation:sway 2s infinite ease-in-out; filter:drop-shadow(0 0 30px #ff9900); }
+  @keyframes sway { 0%,100% { transform:translateX(-10px) rotate(-1deg); } 50% { transform:translateX(10px) rotate(1deg); } }
+  .start-btn { padding:1.2rem 3.5rem; font-family:'Orbitron', sans-serif; font-size:clamp(1rem,1.6vw,1.6rem); font-weight:900;
+    letter-spacing:0.2em; text-transform:uppercase; cursor:pointer; color:#000;
+    border:2px solid #ffcc00; border-radius:60px;
+    background:linear-gradient(45deg, #ff4500, #ffaa00);
+    box-shadow:0 0 30px #ff6600, 0 0 60px #ff4500, inset 0 0 20px rgba(255,255,255,0.4);
+    transition:transform 0.15s; animation:btnPulse 1.4s infinite alternate; }
+  .start-btn:hover { transform:scale(1.06); }
+  .start-btn:active { transform:scale(0.95); }
+  @keyframes btnPulse { from { box-shadow:0 0 20px #ff6600, 0 0 40px #ff4500; }
+    to { box-shadow:0 0 45px #ffcc00, 0 0 90px #ff6600; } }
+
+  #phase2 h2 { font-size:clamp(1.8rem, 4vw, 3rem); color:#ffaa00; letter-spacing:0.2em;
+    text-shadow:0 0 30px #ff5500; margin-bottom:0.6rem; }
+  #phase2 .garage-sub { font-size:0.8rem; color:#888; letter-spacing:0.25em;
+    margin-bottom:1.2rem; text-transform:uppercase; }
+
+  .garage-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:1.2rem;
+    padding:0 2rem 2rem; max-width:1250px; max-height:68vh; overflow-y:auto;
+    scrollbar-width:thin; scrollbar-color:#ff7700 #111; }
+  .garage-grid::-webkit-scrollbar { width:8px; }
+  .garage-grid::-webkit-scrollbar-track { background:#111; border-radius:4px; }
+  .garage-grid::-webkit-scrollbar-thumb { background:linear-gradient(180deg,#ff7700,#ffaa00); border-radius:4px; }
+
+  .car-card { width:190px; padding:0.9rem 0.7rem; border-radius:20px;
+    background:linear-gradient(160deg, #141414, #050505);
+    border:2px solid #333; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    transition:transform 0.35s cubic-bezier(.2,.9,.3,1.4), box-shadow 0.3s, border-color 0.3s;
+    position:relative; overflow:hidden; }
+  .car-card::before { content:''; position:absolute; inset:-2px; border-radius:20px;
+    padding:2px; background:linear-gradient(120deg, transparent, currentColor, transparent);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude; opacity:0; transition:opacity 0.3s; }
+  .car-card:hover::before { opacity:1; }
+  .car-card:hover { transform:translateY(-10px) scale(1.03);
+    box-shadow:0 20px 40px -12px currentColor, 0 0 40px -5px currentColor; }
+  .car-card .preview-box {
+    width:100%; height:95px; margin-bottom:0.5rem;
+    display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(ellipse at center, rgba(255,255,255,0.06), transparent 70%);
+    border-radius:14px;
+  }
+  .car-card .preview-box canvas { width:100%; height:100%; display:block; }
+  .car-card h3 { font-size:0.95rem; margin-bottom:0.2rem; color:#fff; letter-spacing:0.06em; }
+  .car-card p { font-size:0.6rem; color:#aaa; line-height:1.3; letter-spacing:0.02em; }
+  .car-card .glb-name { font-size:0.5rem; color:#555; margin-top:0.3rem; font-family:monospace; }
+
+  #phase3 { background:transparent; backdrop-filter:none;
+    justify-content:flex-start; padding-top:5vh; pointer-events:none; opacity:1; }
+  #phase3.hidden { opacity:0; visibility:hidden; }
+  .hud-top { display:flex; justify-content:space-between; align-items:center;
+    width:90%; max-width:1100px; pointer-events:none; }
+  .hud-lap { font-size:1.1rem; letter-spacing:0.22em; color:#ffaa00;
+    text-shadow:0 0 15px #ff5500; background:rgba(0,0,0,0.4);
+    padding:0.5rem 1.2rem; border-radius:40px; border:1px solid #ff7700aa; }
+  .hud-speed { font-size:1.1rem; letter-spacing:0.18em; color:#00e0ff;
+    text-shadow:0 0 15px #00aaff; background:rgba(0,0,0,0.4);
+    padding:0.5rem 1.2rem; border-radius:40px; border:1px solid #00aaffaa; }
+  .race-subtitle-wrap { position:absolute; top:24%; left:0; right:0;
+    display:flex; justify-content:center; pointer-events:none; padding:0 1rem; }
+  .race-subtitle { font-size:clamp(1.1rem, 2.6vw, 2.2rem); font-weight:900; letter-spacing:0.04em;
+    text-align:center; padding:0.7rem 1.8rem; border-radius:60px;
+    background:rgba(0,0,0,0.6); border-left:6px solid #ff7700; border-right:6px solid #ff7700;
+    white-space:normal; max-width:90vw; line-height:1.2;
+    animation:subtitlePop 0.5s ease-out; opacity:0; transition:opacity 0.3s; }
+  .race-subtitle.visible { opacity:1; }
+  @keyframes subtitlePop { 0% { transform:scale(0.4); opacity:0; filter:blur(8px); }
+    70% { transform:scale(1.08); opacity:1; filter:blur(0); } 100% { transform:scale(1); } }
+  .race-progress-wrap { position:absolute; bottom:6vh; left:50%; transform:translateX(-50%);
+    width:70%; max-width:700px; height:10px; border-radius:10px;
+    background:rgba(255,255,255,0.12); overflow:hidden; border:1px solid #ff770055; }
+  .race-progress { height:100%; width:0%;
+    background:linear-gradient(90deg, #ff7700, #ffcc00);
+    box-shadow:0 0 20px #ffaa00, 0 0 40px #ff6600; transition:width 0.2s linear; }
+
+  #phase4 { background:rgba(0,0,0,0.75); backdrop-filter:blur(10px); }
+  .letter-card { width:min(640px, 92vw); padding:2.6rem 2.4rem; border-radius:32px;
+    background:linear-gradient(160deg, #121212, #050505);
+    border:3px solid #ffaa00; text-align:center;
+    animation:cardIn 0.7s cubic-bezier(.2,.9,.3,1.3); position:relative;
+    max-height:85vh; overflow-y:auto; }
+  @keyframes cardIn { 0% { transform:scale(0.6) translateY(40px) rotateX(15deg); opacity:0; }
+    100% { transform:scale(1) translateY(0) rotateX(0); opacity:1; } }
+  .letter-card h2 { font-size:clamp(1.3rem, 2.6vw, 2rem); margin-bottom:1.4rem; letter-spacing:0.08em;
+    text-shadow:0 0 20px currentColor; }
+  .letter-card p { font-size:clamp(0.9rem, 1.4vw, 1.1rem); line-height:1.7; color:#ddd;
+    margin-bottom:2.2rem; font-weight:400; letter-spacing:0.03em; }
+  .letter-buttons { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+  .letter-buttons button { font-family:'Orbitron', sans-serif; font-size:1rem; font-weight:700; letter-spacing:0.1em;
+    padding:0.85rem 1.8rem; border-radius:50px; cursor:pointer;
+    background:transparent; color:#fff; border:2px solid #666; transition:all 0.25s; }
+  .letter-buttons button:hover { transform:translateY(-3px); }
+  .letter-buttons .repeat-btn { border-color:#ffaa00; color:#ffaa00; }
+  .letter-buttons .repeat-btn:hover { box-shadow:0 0 30px #ffaa00; background:rgba(255,170,0,0.1); }
+  .letter-buttons .garage-btn { border-color:#00c8ff; color:#00c8ff; }
+  .letter-buttons .garage-btn:hover { box-shadow:0 0 30px #00c8ff; background:rgba(0,200,255,0.1); }
+
+  #loader { position:fixed; inset:0; z-index:200; background:#000;
+    display:flex; justify-content:center; align-items:center; flex-direction:column; gap:1rem;
+    transition:opacity 0.6s; }
+  #loader.hidden { opacity:0; pointer-events:none; }
+  .spinner { width:60px; height:60px; border-radius:50%; border:4px solid #222;
+    border-top-color:#ff7700; animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  #loader p { color:#ffaa00; letter-spacing:0.3em; font-size:0.9rem; }
+  #loader .progress-text { color:#888; font-size:0.7rem; letter-spacing:0.2em; }
+  .progress-bar-wrap { width:min(400px, 80vw); height:6px; background:#222; border-radius:3px; overflow:hidden; }
+  .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#ff7700,#ffcc00);
+    box-shadow:0 0 12px #ffaa00; transition:width 0.2s; }
+
+  .skip-btn { position:fixed; bottom:20px; right:20px; z-index:50;
+    background:rgba(0,0,0,0.6); color:#ffaa00; border:1px solid #ff7700;
+    font-family:'Orbitron', sans-serif; padding:0.5rem 1rem; border-radius:40px; cursor:pointer;
+    font-size:0.8rem; letter-spacing:0.15em; opacity:0; transition:opacity 0.3s; }
+  .skip-btn.show { opacity:1; }
+</style>
+</head>
+<body>
+
+  <div id="scene-container"></div>
+  <div class="vignette"></div>
+  <div class="speed-flash" id="speedFlash"></div>
+
+  <div id="loader">
+    <div class="spinner"></div>
+    <p>CARGANDO MODELOS 3D...</p>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="loadProgress"></div></div>
+    <div class="progress-text" id="loadText">0%</div>
+  </div>
+
+  <div id="phase1" class="phase">
+    <h1>SPEED OF LOVE</h1>
+    <div class="subtitle">Presiona para arrancar juntos este viaje</div>
+    <div class="main-car-icon">🏎️💨</div>
+    <button id="startBtn" class="start-btn">Acelerar 🔥</button>
+  </div>
+
+  <div id="phase2" class="phase hidden">
+    <h2>EL GARAGE</h2>
+    <div class="garage-sub">Elige tu Hot Wheels favorito</div>
+    <div class="garage-grid" id="garageGrid"></div>
+  </div>
+
+  <div id="phase3" class="phase hidden">
+    <div class="hud-top">
+      <div class="hud-lap" id="hudLap">CARRERA EN VIVO</div>
+      <div class="hud-speed" id="hudSpeed">0 KM/H</div>
+    </div>
+    <div class="race-subtitle-wrap">
+      <div id="raceSubtitle" class="race-subtitle"></div>
+    </div>
+    <div class="race-progress-wrap">
+      <div id="raceProgress" class="race-progress"></div>
+    </div>
+  </div>
+
+  <div id="phase4" class="phase hidden">
+    <div id="letterCard" class="letter-card">
+      <h2 id="letterTitle">Para ti</h2>
+      <p id="letterBody">...</p>
+      <div class="letter-buttons">
+        <button id="repeatBtn" class="repeat-btn"> Repetir carrera</button>
+        <button id="garageBtn" class="garage-btn"> Elegir otro auto</button>
+      </div>
+    </div>
+  </div>
+
+  <button id="skipBtn" class="skip-btn">Saltar carrera ⏭</button>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+    // ========================================================
+    // 🚗  LOS 10 COCHES
+    // ========================================================
+    const CARS = [
+      { id: 'raptor', file: 'raptor.glb', name: 'FORD F-150 RAPTOR', desc: 'Camioneta Todoterreno · Un amor que lo supera todo', color: 0xffffff, rotationY: Math.PI,
+      phrases: ["Contigo no existen caminos difíciles ni baches que nos puedan frenar. 🏔️", "Este motor ruge fuerte, pero mi corazón late más rápido cuando te subes.", "Me encanta cómo se siente el viaje cuando tú eres quien maneja mi vida.", "Eres la única persona capaz de hacerme sentir a salvo en cualquier terreno.", "Aunque tengamos tracción en las cuatro ruedas, tú eres mi único agarre seguro.", "Contigo iría hasta el fin del mundo, sin importar si hay carretera o no. ✨", "Llegamos a la meta, pero este viaje todoterreno a tu lado apenas empieza. 🖤"],
+        letterTitle: "Raptor · Un amor que lo supera todo", letterBody: "Escribo esto pensando en la fuerza y la seguridad que me transmites cada día. Eres como una Raptor: imponente por fuera, pero el lugar más cómodo y seguro para mí por dentro. Me encanta que no le tengas miedo a los caminos difíciles, que conviertas cualquier obstáculo en una aventura y que siempre encuentres la manera de hacerme sonreír en las curvas de la vida. Gracias por ser mi compañero de ruta, mi protector y mi aventura favorita a cuatro ruedas. Te quiero más de lo que cualquier motor de alta potencia podría llegar a demostrar en toda una vida. 🖤" },
+      { id: 'kitt', file: 'kitt.glb', name: 'K.I.T.T. (Pontiac Firebird)', desc: 'Deportivo Inteligente · Un amor con inteligencia artificial', color: 0xffffff, rotationY: Math.PI,
+        phrases: ["Mi escáner frontal parpadea en rojo cada vez que te acercas... es mi forma de latir. ❤️‍🔥", "No necesito activar el modo de conducción autónoma si el destino siempre eres tú.", "Aceleremos a fondo con el Turbo Boost, mi corazón va a mil por hora contigo.", "Eres la única persona capaz de tomar el control de mis sistemas sin hackearme.", "Incluso la computadora más avanzada del mundo se queda sin palabras al mirarte.", "Viajar en el tiempo o recorrer carreteras vacías... da igual el rumbo si es a tu lado. ✨", "Llegamos al final de la ruta, pero nuestro viaje apenas está comenzando. 🖤"],
+        letterTitle: "K.I.T.T. · Un amor con inteligencia artificial", letterBody: "Escribo esto procesando cada milisegundo que pasamos juntos, guardando cada sonrisa tuya en mi banco de memoria central. Llegaste a mi vida para demostrarme que, detrás de toda mi carrocería blindada y mis sistemas avanzados, hay un motor que ruge con fuerza solo por ti. Contigo aprendí que el viaje más emocionante no se mide en caballos de fuerza ni en velocidad máxima, sino en la tranquilidad de ir en el asiento de al lado compartiendo el mismo camino. Te quiero más de lo que cualquier software o velocímetro podría llegar a calcular en toda una eternidad. 🖤" },
+      { id: 'jackhammer', file: 'jackhammer.glb', name: 'JACK HAMMER', desc: 'Deportivo · Un amor puro y celestial', color: 0xd0d8e0, rotationY: Math.PI,
+        phrases: ["Oye... cuando te vi llegar con este coche, sentí que algo bonito empezaba ✨","Eres mi ángel de la guarda con ruedas, ¿lo sabías?","Cada vez que aceleras, mi corazón hace lo mismo pero más rápido.","Me encanta cómo me miras cuando crees que no me doy cuenta.","Contigo hasta el silencio se siente como música de fondo.","Si pudiera pedir un deseo, sería más tardes así, contigo.","Llegamos a la meta, pero mi amor por ti no se detiene nunca. 🤍"],
+        letterTitle: "Jack Hammer · Un amor celestial", letterBody: "Escribo esto mientras pienso en todas las veces que me has hecho sonreír sin darte cuenta. Eres esa persona que llegó a mi vida como un ángel con ruedas, sin avisar y sin hacer ruido. Contigo aprendí que el amor más bonito es el que se siente tranquilo, seguro, como un motor que ronronea suave. Gracias por cada mirada, por cada silencio cómodo, por cada carcajada a 200 por hora. Te quiero más de lo que este velocímetro puede marcar. 🤍" },
+      { id: 'chevrolet', file: 'chevrolet.glb', name: 'CHEVROLET', desc: 'Muscle Car Azul · Fuerza que enamora', color: 0x2266dd, rotationY: Math.PI,
+        phrases: ["Oye, ese azul te hace ver tan guapo que hasta yo me distraigo 🏎️","Me encanta cuando pisas el acelerador y se te escapa una sonrisa.","Contigo hasta los atascos son una cita perfecta.","Eres mi muscle car favorito: fuerte por fuera, tierno por dentro.","Cada rugido del motor me recuerda lo mucho que me gustas.","Si la vida fuera una carrera, yo te elegiría como copiloto siempre.","Ganamos juntos, pero mi premio real eres tú. 💙"],
+        letterTitle: "Chevrolet · Fuerza que enamora", letterBody: "Desde el primer día supe que contigo sería diferente. Eres fuerte como un muscle car, pero tienes un corazón tierno que me derrite. Me encanta cómo ruge ese motor cuando aceleras, cómo te brillan los ojos cuando presumes tus derrapes y cómo te ríes cuando me asusto en las curvas. Eres mi compañero de mil aventuras, mi persona favorita, mi amor a toda velocidad. Gracias por cada kilómetro juntos y por los que nos faltan. Te quiero. 💙" },
+      { id: 'gladiator', file: 'gladiator.glb', name: 'GLADIATOR', desc: 'Jeep Blanco · Aventurero y resistente', color: 0xeaeaea, rotationY: Math.PI,
+        phrases: ["Ese blanco te hace ver tan rudo que hasta me dan ganas de subirme 🚙","Eres mi gladiador favorito, el que siempre pelea por nosotros.","Con este coche hasta el barro se ve bonito, ¿cómo le haces?","Me encanta que no le tengas miedo a los caminos difíciles.","Contigo hasta perdernos es la mejor parte del viaje.","Eres mi compañero de aventuras y mi persona segura.","Llegamos a la meta, pero nuestra aventura sigue. 🤍"],
+        letterTitle: "Gladiator · Mi guerrero favorito", letterBody: "Escribo esto pensando en todas las veces que has sido mi guerrero, mi protector, mi persona segura. Me encanta que no le tengas miedo a los caminos difíciles, que conviertas las piedras en rampas y que siempre encuentres la manera de hacerme sonreír. Eres mi gladiador favorito, el que pelea por nosotros incluso cuando no se lo pedimos. Gracias por cada aventura, por cada risa, por cada momento en el que me haces sentir la mujer más afortunada. Te quiero. 🤍" },
+      { id: 'hyperconcept', file: 'hyperconcept.glb', name: 'HYPERCONCEPT', desc: 'Futurista · Amor sin límites', color: 0xe0e8f0, rotationY: Math.PI,
+        phrases: ["Contigo el futuro se ve brillante... literal, como este coche ✨","Me haces volar más allá de lo que había planeado para mi vida.","Eres mi destino favorito en cualquier galaxia, ¿lo sabías?","Si el amor tuviera turbo, sería exactamente esto que siento.","Aceleras mi corazón a mil por hora y no quiero frenar nunca.","Eres mi ciencia ficción favorita hecha realidad. Te adoro.","Llegamos a la meta, pero quiero seguir viajando contigo. 🤍"],
+        letterTitle: "Hyperconcept · Amor a mil por hora", letterBody: "Contigo el amor es de ciencia ficción: acelera mi corazón a mil por hora y no quiero frenar jamás. Eres el destino más hermoso que el universo me pudo dar. Cada vez que te veo, siento que el futuro se vuelve brillante y lleno de posibilidades. Eres mi persona favorita en cualquier galaxia, mi copiloto interestelar. Te amo más allá de lo conocido. 🤍" },
+      { id: 'angels', file: 'angels.glb', name: 'ANGELS', desc: 'Hot Rod Rojo · Pasión ardiente', color: 0xe02222, rotationY: Math.PI,
+        phrases: ["Ese rojo es peligroso... como lo que siento cuando me miras 🔥","Contigo todo arde más bonito, incluso los enojos.","Eres mi chispa, mi fuego, mi persona favorita.","Me encanta cuando aceleras y se te escapa esa sonrisa pícara.","Si el amor quemara, yo ya estaría en llamas por ti.","Contigo hasta el asfalto se derrite. Eres demasiado para mí.","Llegamos, pero mi corazón sigue a toda velocidad por ti. ❤️"],
+        letterTitle: "Angels · Pasión ardiente", letterBody: "Escribo esto con el corazón encendido porque tú me haces sentir cosas que no sabía que podía sentir. Eres mi chispa, mi fuego, mi persona favorita para hacer locuras. Me encanta cómo presumes ese motor, cómo te ríes cuando me asusto y cómo me haces sentir viva. Contigo hasta el asfalto se derrite. Gracias por cada momento, por cada caricia, por cada beso robado. Te amo con toda mi alma. ❤️" },
+      { id: 'r8', file: 'r8.glb', name: 'R8', desc: 'Deportivo Plata · Elegancia pura', color: 0xb8c4cc, rotationY: Math.PI,
+        phrases: ["Ese plateado te hace ver como sacado de una película 🎬","Eres mi protagonista favorito, mi estrella, mi todo.","Me encanta cómo me miras cuando crees que estoy distraída.","Contigo hasta el silencio se siente elegante.","Si el amor tuviera clase, sería exactamente este momento.","Eres mi persona favorita, mi lujo más bonito.","Llegamos, pero yo quiero seguir siendo tu copiloto siempre. 🩶"],
+        letterTitle: "R8 · Elegancia pura", letterBody: "Dicen que la elegancia no se compra, se lleva. Y tú la llevas con una naturalidad que me enamora cada día. Eres mi protagonista favorito, mi estrella de cine, mi todo. Me encanta cómo me tratas, cómo me cuidas, cómo me haces sentir la mujer más especial del mundo. Contigo hasta el silencio se siente elegante. Gracias por cada detalle, por cada gesto, por cada momento. Te amo. 🩶" },
+      ];
+
+    // ============ AUDIO ============
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    function playEngine() {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(80, now);
+      osc.frequency.linearRampToValueAtTime(240, now + 0.5);
+      osc.frequency.linearRampToValueAtTime(130, now + 1.0);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.linearRampToValueAtTime(0.25, now + 0.2);
+      gain.gain.linearRampToValueAtTime(0, now + 1.2);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 1.2);
+    }
+    function playScreech() {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(900, now);
+      osc.frequency.exponentialRampToValueAtTime(280, now + 0.5);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.6);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.6);
+    }
+    function playBlip() {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(660, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.15);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.15);
+    }
+
+    // ============ THREE.JS SETUP ============
+    const container = document.getElementById('scene-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x05050a);
+    scene.fog = new THREE.FogExp2(0x05050a, 0.0085);
+
+    const camera = new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 800);
+    const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.9, 0.6, 0.2);
+    composer.addPass(bloom);
+
+    scene.add(new THREE.AmbientLight(0x334455, 1.1));
+    scene.add(new THREE.HemisphereLight(0x0099ff, 0xff4400, 0.9));
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    dirLight.position.set(20, 40, 20);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.set(1024,1024);
+    dirLight.shadow.camera.left = -50;
+    dirLight.shadow.camera.right = 50;
+    dirLight.shadow.camera.top = 50;
+    dirLight.shadow.camera.bottom = -50;
+    scene.add(dirLight);
+
+    const neonLights = [];
+    for (let i = 0; i < 6; i++) {
+      const pl = new THREE.PointLight(i%2===0 ? 0xff7700 : 0x00c8ff, 3, 60, 2);
+      scene.add(pl);
+      neonLights.push(pl);
+    }
+
+    // ========================================================
+    // 🛣️  PISTA TOTALMENTE RECTA
+    // ========================================================
+    // Solo una línea recta en el eje Z. Sin curvas, sin nada.
+    const TRACK_LENGTH = 800;
+    const trackCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 0, -TRACK_LENGTH * 0.25),
+      new THREE.Vector3(0, 0, -TRACK_LENGTH * 0.5),
+      new THREE.Vector3(0, 0, -TRACK_LENGTH * 0.75),
+      new THREE.Vector3(0, 0, -TRACK_LENGTH),
+    ], false, 'catmullrom', 0.5);
+
+    const trackWidth = 13;
+    const N = 600;
+    const trackGeo = new THREE.BufferGeometry();
+    const positions = [];
+    const indices = [];
+    const uvs = [];
+
+    const pt = new THREE.Vector3();
+    const tangent = new THREE.Vector3();
+    const up = new THREE.Vector3(0,1,0);
+    const side = new THREE.Vector3();
+
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      trackCurve.getPointAt(t, pt);
+      trackCurve.getTangentAt(t, tangent).normalize();
+      side.crossVectors(tangent, up).normalize().multiplyScalar(trackWidth/2);
+      positions.push(pt.x - side.x, pt.y, pt.z - side.z);
+      positions.push(pt.x + side.x, pt.y, pt.z + side.z);
+      uvs.push(0, t*40);
+      uvs.push(1, t*40);
+      if (i < N) {
+        const a = i*2, b = i*2+1, c = (i+1)*2, d = (i+1)*2+1;
+        indices.push(a, c, b);
+        indices.push(b, c, d);
+      }
+    }
+    trackGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
+    trackGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs,2));
+    trackGeo.setIndex(indices);
+    trackGeo.computeVertexNormals();
+
+    const trackMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a1a, roughness: 0.85, metalness: 0.2,
+      emissive: 0x221100, emissiveIntensity: 0.3
+    });
+    const trackMesh = new THREE.Mesh(trackGeo, trackMat);
+    trackMesh.receiveShadow = true;
+    scene.add(trackMesh);
+
+    // Rieles de neón laterales (rectos)
+    function createNeonRail(offset) {
+      const railPoints = [];
+      for (let i = 0; i <= 300; i++) {
+        const t = i / 300;
+        const p = trackCurve.getPointAt(t, new THREE.Vector3());
+        const tg = trackCurve.getTangentAt(t, new THREE.Vector3()).normalize();
+        const sd = new THREE.Vector3().crossVectors(tg, new THREE.Vector3(0,1,0)).normalize().multiplyScalar(offset);
+        railPoints.push(new THREE.Vector3(p.x + sd.x, 0.15, p.z + sd.z));
+      }
+      const railCurve = new THREE.CatmullRomCurve3(railPoints, false);
+      const railGeo = new THREE.TubeGeometry(railCurve, 300, 0.2, 8, false);
+      const railMat = new THREE.MeshStandardMaterial({
+        color: offset > 0 ? 0x00c8ff : 0xff7700,
+        emissive: offset > 0 ? 0x00c8ff : 0xff7700,
+        emissiveIntensity: 2.5, roughness: 0.3, metalness: 0.4
+      });
+      return new THREE.Mesh(railGeo, railMat);
+    }
+    scene.add(createNeonRail(trackWidth/2 + 0.2));
+    scene.add(createNeonRail(-trackWidth/2 - 0.2));
+
+    // Línea central discontinua recta
+    const centerLineGeo = new THREE.BufferGeometry();
+    const centerPositions = [];
+    for (let i = 0; i < 1200; i++) {
+      if (i % 8 < 4) {
+        const t1 = i/1200, t2 = (i+1)/1200;
+        const p1 = trackCurve.getPointAt(t1, new THREE.Vector3());
+        const p2 = trackCurve.getPointAt(t2, new THREE.Vector3());
+        centerPositions.push(p1.x, 0.05, p1.z, p2.x, 0.05, p2.z);
+      }
+    }
+    centerLineGeo.setAttribute('position', new THREE.Float32BufferAttribute(centerPositions, 3));
+    const centerLine = new THREE.LineSegments(centerLineGeo, new THREE.LineBasicMaterial({
+      color: 0xffcc00, transparent:true, opacity:0.5
+    }));
+    scene.add(centerLine);
+
+    // Línea de META al final
+    const metaGeo = new THREE.PlaneGeometry(trackWidth + 2, 1.2);
+    const metaMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, side: THREE.DoubleSide });
+    const metaMesh = new THREE.Mesh(metaGeo, metaMat);
+    metaMesh.rotation.x = -Math.PI/2;
+    metaMesh.position.set(0, 0.06, -TRACK_LENGTH);
+    scene.add(metaMesh);
+
+    // Cuadros de meta (checkered)
+    const checkerGeo = new THREE.PlaneGeometry(trackWidth + 2, 3);
+    const checkerCanvas = document.createElement('canvas');
+    checkerCanvas.width = 64;
+    checkerCanvas.height = 16;
+    const cctx = checkerCanvas.getContext('2d');
+    for (let y = 0; y < 2; y++) {
+      for (let x = 0; x < 8; x++) {
+        cctx.fillStyle = (x + y) % 2 === 0 ? '#ffffff' : '#000000';
+        cctx.fillRect(x * 8, y * 8, 8, 8);
+      }
+    }
+    const checkerTex = new THREE.CanvasTexture(checkerCanvas);
+    const checkerMat = new THREE.MeshBasicMaterial({ map: checkerTex, side: THREE.DoubleSide });
+    const checkerMesh = new THREE.Mesh(checkerGeo, checkerMat);
+    checkerMesh.rotation.x = -Math.PI/2;
+    checkerMesh.position.set(0, 0.07, -TRACK_LENGTH + 2);
+    scene.add(checkerMesh);
+
+    const grid = new THREE.GridHelper(1400, 140, 0x222222, 0x111111);
+    grid.position.y = -0.5;
+    grid.position.z = -TRACK_LENGTH / 2;
+    scene.add(grid);
+
+    const groundMat = new THREE.MeshStandardMaterial({ color:0x050505, roughness:0.4, metalness:0.6 });
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), groundMat);
+    ground.rotation.x = -Math.PI/2;
+    ground.position.y = -0.6;
+    ground.position.z = -TRACK_LENGTH / 2;
+    scene.add(ground);
+
+    const starsGeo = new THREE.BufferGeometry();
+    const starCount = 1500;
+    const starPos = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount * 3; i += 3) {
+      starPos[i] = (Math.random() - 0.5) * 1500;
+      starPos[i+1] = Math.random() * 150 + 20;
+      starPos[i+2] = (Math.random() - 0.5) * 1500 - TRACK_LENGTH / 2;
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({
+      color: 0x8899ff, size:0.7, transparent:true, opacity:0.7, sizeAttenuation:true
+    }));
+    scene.add(stars);
+
+    // ============ LOADER GLB ============
+    const TARGET_LENGTH = 5.0;
+
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.setDRACOLoader(dracoLoader);
+
+    const modelCache = {};
+
+    const loadProgressEl = document.getElementById('loadProgress');
+    const loadTextEl = document.getElementById('loadText');
+    const loaderEl = document.getElementById('loader');
+
+    let loadedCount = 0;
+    const totalToLoad = CARS.length;
+
+    function updateLoadProgress() {
+      const pct = Math.round((loadedCount / totalToLoad) * 100);
+      loadProgressEl.style.width = pct + '%';
+      loadTextEl.textContent = pct + '%';
+      if (loadedCount >= totalToLoad) {
+        setTimeout(() => loaderEl.classList.add('hidden'), 400);
+      }
+    }
+
+    function processModel(model, car) {
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = TARGET_LENGTH / maxDim;
+      model.scale.setScalar(scale);
+
+      const box2 = new THREE.Box3().setFromObject(model);
+      const center2 = box2.getCenter(new THREE.Vector3());
+      const min2 = box2.min;
+
+      model.position.x -= center2.x;
+      model.position.z -= center2.z;
+      model.position.y -= min2.y;
+
+      model.traverse(child => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+
+      return { model, size: size.clone().multiplyScalar(scale) };
+    }
+
+    function loadModel(car) {
+      return new Promise((resolve) => {
+        gltfLoader.load(car.file, (gltf) => {
+          const result = processModel(gltf.scene, car);
+          modelCache[car.id] = {
+            scene: result.model,
+            size: result.size,
+            rotationY: car.rotationY || 0,
+            carData: car
+          };
+          loadedCount++;
+          updateLoadProgress();
+          resolve(modelCache[car.id]);
+        },
+        undefined,
+        (err) => {
+          console.warn('Error cargando', car.file, '— usando placeholder');
+          const geo = new THREE.BoxGeometry(2.4, 1.5, 5);
+          const mat = new THREE.MeshStandardMaterial({
+            color: car.color, emissive: car.color, emissiveIntensity: 0.4,
+            roughness: 0.4, metalness: 0.6
+          });
+          const mesh = new THREE.Mesh(geo, mat);
+          mesh.position.y = 0.75;
+          const group = new THREE.Group();
+          group.add(mesh);
+          modelCache[car.id] = {
+            scene: group,
+            rotationY: car.rotationY || 0,
+            carData: car
+          };
+          loadedCount++;
+          updateLoadProgress();
+          resolve(modelCache[car.id]);
+        });
+      });
+    }
+
+    Promise.all(CARS.map(car => loadModel(car))).then(() => {
+      console.log('✅ Todos los modelos cargados:', loadedCount);
+      buildGarage();
+    });
+
+    // ============ CONSTRUIR GARAJE ============
+    function buildGarage() {
+      const grid = document.getElementById('garageGrid');
+      grid.innerHTML = '';
+
+      CARS.forEach(car => {
+        const card = document.createElement('div');
+        card.className = 'car-card';
+        card.dataset.car = car.id;
+
+        const colorStr = '#' + car.color.toString(16).padStart(6, '0');
+        card.style.color = colorStr;
+
+        const previewBox = document.createElement('div');
+        previewBox.className = 'preview-box';
+        previewBox.id = 'preview-' + car.id;
+        card.appendChild(previewBox);
+
+        const h3 = document.createElement('h3');
+        h3.textContent = car.name;
+        card.appendChild(h3);
+
+        const p = document.createElement('p');
+        p.textContent = car.desc;
+        card.appendChild(p);
+
+        const glbName = document.createElement('div');
+        glbName.className = 'glb-name';
+        glbName.textContent = car.file;
+        card.appendChild(glbName);
+
+        card.addEventListener('click', () => {
+          initAudio();
+          startRace(car.id);
+        });
+
+        grid.appendChild(card);
+      });
+
+      requestAnimationFrame(() => generatePreviews());
+    }
+
+    function cloneModelForScene(cached) {
+      const clonedScene = cached.scene.clone(true);
+      clonedScene.rotation.y = cached.rotationY;
+      return clonedScene;
+    }
+
+    function generatePreviews() {
+      CARS.forEach(car => {
+        const previewEl = document.getElementById('preview-' + car.id);
+        if (!previewEl) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 300;
+        canvas.height = 150;
+        previewEl.appendChild(canvas);
+
+        const pRenderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+        pRenderer.setSize(300, 150, false);
+        pRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        pRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+        pRenderer.toneMappingExposure = 1.3;
+
+        const pScene = new THREE.Scene();
+        pScene.add(new THREE.AmbientLight(0xffffff, 1.5));
+        const pDir = new THREE.DirectionalLight(0xffffff, 2.2);
+        pDir.position.set(5, 10, 7);
+        pScene.add(pDir);
+        const pLightBack = new THREE.DirectionalLight(car.color, 1.8);
+        pLightBack.position.set(-5, 3, -5);
+        pScene.add(pLightBack);
+
+        const pCamera = new THREE.PerspectiveCamera(35, 2, 0.1, 100);
+
+        const modelClone = cloneModelForScene(modelCache[car.id]);
+        pScene.add(modelClone);
+
+        const box = new THREE.Box3().setFromObject(modelClone);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const dist = maxDim * 1.9;
+        pCamera.position.set(center.x + dist * 0.8, center.y + dist * 0.45, center.z + dist * 0.9);
+        pCamera.lookAt(center.x, center.y, center.z);
+
+        pRenderer.render(pScene, pCamera);
+      });
+    }
+
+    // ============ VARIABLES DE CARRERA ============
+    let activeCar = null;
+    let activeCarType = 'angels';
+    let activeCarData = null;
+    let carProgress = 0;
+    const TARGET_SPEED = 1 / 24;
+    let currentSpeed = 0;
+    let raceActive = false;
+    let raceFinished = false;
+
+    let phraseTriggerProgress = [];
+    let phraseShown = [];
+    let phraseTimer = 0;
+    let phraseActive = false;
+    const PHRASE_DURATION = 4.5;
+
+    const sparkPool = [];
+    const sparkGeometry = new THREE.SphereGeometry(0.12, 6, 6);
+    for (let i = 0; i < 120; i++) {
+      const mat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0 });
+      const spark = new THREE.Mesh(sparkGeometry, mat);
+      spark.visible = false;
+      spark.frustumCulled = false;
+      spark.userData = { life:0, vel:new THREE.Vector3() };
+      scene.add(spark);
+      sparkPool.push(spark);
+    }
+    let sparkIndex = 0;
+    function emitSpark(pos) {
+      const spark = sparkPool[sparkIndex];
+      sparkIndex = (sparkIndex + 1) % sparkPool.length;
+      spark.position.copy(pos);
+      spark.material.color.setHex(Math.random() > 0.5 ? 0xffaa00 : 0xff5500);
+      spark.material.opacity = 1;
+      spark.visible = true;
+      spark.userData.life = 0.6;
+      spark.userData.vel.set(
+        (Math.random()-0.5)*0.3,
+        Math.random()*0.25 + 0.05,
+        (Math.random()-0.5)*0.3
+      );
+      spark.scale.setScalar(1 + Math.random()*1.5);
+    }
+
+    // ============ UI ============
+    const phase1 = document.getElementById('phase1');
+    const phase2 = document.getElementById('phase2');
+    const phase3 = document.getElementById('phase3');
+    const phase4 = document.getElementById('phase4');
+    const startBtn = document.getElementById('startBtn');
+    const raceSubtitle = document.getElementById('raceSubtitle');
+    const raceProgress = document.getElementById('raceProgress');
+    const hudSpeed = document.getElementById('hudSpeed');
+    const letterTitle = document.getElementById('letterTitle');
+    const letterBody = document.getElementById('letterBody');
+    const letterCard = document.getElementById('letterCard');
+    const repeatBtn = document.getElementById('repeatBtn');
+    const garageBtn = document.getElementById('garageBtn');
+    const speedFlash = document.getElementById('speedFlash');
+    const skipBtn = document.getElementById('skipBtn');
+
+    // ============ FUNCIONES ============
+    function removeActiveCar() {
+      if (activeCar) {
+        scene.remove(activeCar.group);
+        activeCar = null;
+      }
+    }
+
+    function startRace(carId) {
+      if (!modelCache[carId]) {
+        console.warn('Modelo no cargado aún:', carId);
+        return;
+      }
+
+      activeCarType = carId;
+      activeCarData = modelCache[carId].carData;
+      carProgress = 0;
+      currentSpeed = 0;
+      raceActive = true;
+      raceFinished = false;
+
+      const phrases = activeCarData.phrases;
+      const numPhrases = phrases.length;
+      phraseTriggerProgress = phrases.map((_, i) => 0.08 + (i / numPhrases) * 0.80);
+      phraseShown = new Array(numPhrases).fill(false);
+      phraseTimer = 0;
+      phraseActive = false;
+
+      raceSubtitle.classList.remove('visible');
+      raceSubtitle.textContent = '';
+
+      removeActiveCar();
+
+      const cached = modelCache[carId];
+      const carGroup = new THREE.Group();
+      const modelClone = cloneModelForScene(cached);
+      carGroup.add(modelClone);
+
+      const wheels = [];
+      modelClone.traverse(child => {
+        if (child.isMesh) {
+          const name = (child.name || '').toLowerCase();
+          if (name.includes('wheel') || name.includes('rueda') || name.includes('tire') || name.includes('llanta')) {
+            wheels.push(child);
+          }
+        }
+      });
+
+      activeCar = { group: carGroup, wheels };
+      scene.add(carGroup);
+
+      // ✅ Posición inicial: al inicio de la pista
+      carGroup.position.set(0, 0.1, 0);
+      carGroup.rotation.set(0, 0, 0); // Mirando hacia -Z (el frente del modelo)
+
+      // ✅ Cámara detrás del coche, mirando hacia -Z
+      camera.position.set(0, 5.5, 11);
+      camera.lookAt(0, 0.5, -5);
+
+      phase1.classList.add('hidden');
+      phase2.classList.add('hidden');
+      phase4.classList.add('hidden');
+      phase3.classList.remove('hidden');
+      skipBtn.classList.add('show');
+      hudSpeed.textContent = '0 KM/H';
+
+      speedFlash.classList.add('active');
+      setTimeout(() => speedFlash.classList.remove('active'), 500);
+      playEngine();
+    }
+
+    function finishRace() {
+      raceActive = false;
+      raceFinished = true;
+      playScreech();
+      skipBtn.classList.remove('show');
+      raceSubtitle.textContent = '🏁 ¡META! 🏁';
+      raceSubtitle.classList.add('visible');
+      raceSubtitle.style.color = '#ffaa00';
+      raceSubtitle.style.textShadow = '0 0 40px #ffaa00, 0 0 80px #ff4500';
+
+      setTimeout(() => {
+        phase3.classList.add('hidden');
+        phase4.classList.remove('hidden');
+        letterTitle.textContent = activeCarData.letterTitle;
+        letterBody.textContent = activeCarData.letterBody;
+        const colorStr = '#' + activeCarData.color.toString(16).padStart(6, '0');
+        letterCard.style.borderColor = colorStr;
+        letterCard.style.boxShadow = `0 0 80px ${colorStr}, 0 0 140px ${colorStr}80`;
+        letterTitle.style.color = colorStr;
+        letterTitle.style.textShadow = `0 0 20px ${colorStr}`;
+      }, 2000);
+    }
+
+    function showPhrase(idx) {
+      const phrases = activeCarData.phrases;
+      if (idx >= phrases.length) return;
+      phraseActive = true;
+      phraseTimer = PHRASE_DURATION;
+      raceSubtitle.textContent = phrases[idx];
+      const colorStr = '#' + activeCarData.color.toString(16).padStart(6, '0');
+      raceSubtitle.style.color = '#fff';
+      raceSubtitle.style.textShadow = `0 0 30px ${colorStr}, 0 0 60px ${colorStr}`;
+      raceSubtitle.style.borderLeftColor = colorStr;
+      raceSubtitle.style.borderRightColor = colorStr;
+      raceSubtitle.classList.add('visible');
+      raceSubtitle.style.animation = 'none';
+      raceSubtitle.offsetHeight;
+      raceSubtitle.style.animation = 'subtitlePop 0.5s ease-out';
+      playBlip();
+    }
+
+    // ============ ANIMACIÓN ============
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const time = clock.elapsedTime;
+
+      neonLights.forEach((l, i) => {
+        l.position.set(
+          Math.sin(time * 0.8 + i) * 30,
+          3 + Math.sin(time * 2 + i) * 1.5,
+          -carProgress * TRACK_LENGTH + Math.cos(time * 0.6 + i) * 20
+        );
+        l.intensity = 2 + Math.sin(time * 5 + i) * 1.5;
+      });
+      stars.rotation.y += dt * 0.005;
+
+      if (activeCar && raceActive) {
+        if (!phraseActive) {
+          currentSpeed += (TARGET_SPEED - currentSpeed) * 0.4 * dt;
+        } else {
+          currentSpeed += (TARGET_SPEED * 0.35 - currentSpeed) * 0.8 * dt;
+        }
+
+        carProgress += currentSpeed * dt;
+        if (carProgress >= 1) {
+          carProgress = 1;
+          if (!raceFinished) finishRace();
+        }
+
+        if (phraseActive) {
+          phraseTimer -= dt;
+          if (phraseTimer <= 0) {
+            phraseActive = false;
+            raceSubtitle.classList.remove('visible');
+          }
+        }
+
+        if (!phraseActive && !raceFinished) {
+          for (let i = 0; i < phraseTriggerProgress.length; i++) {
+            if (!phraseShown[i] && carProgress >= phraseTriggerProgress[i]) {
+              phraseShown[i] = true;
+              showPhrase(i);
+              break;
+            }
+          }
+        }
+
+        // ✅ El coche avanza SOLO en Z (hacia -Z), sin rotación de dirección
+        const bump = Math.sin(carProgress * 80) * 0.05;
+        activeCar.group.position.x = 0;
+        activeCar.group.position.y = 0.1 + bump + Math.sin(time * 55) * 0.015;
+        activeCar.group.position.z = -carProgress * TRACK_LENGTH;
+        // Sin rotación: el coche mira siempre hacia -Z (frente del modelo)
+        activeCar.group.rotation.set(0, 0, 0);
+
+        activeCar.wheels.forEach(w => {
+          w.rotation.x += dt * 15;
+        });
+
+        if (Math.random() < 0.55) {
+          const backOffset = new THREE.Vector3(0, 0.3, 2.4).applyQuaternion(activeCar.group.quaternion);
+          const sparkPos = activeCar.group.position.clone().add(backOffset);
+          sparkPos.y += Math.random() * 0.3;
+          emitSpark(sparkPos);
+        }
+
+        raceProgress.style.width = (carProgress * 100) + '%';
+        const displaySpeed = Math.round(currentSpeed * 24 * 320);
+        hudSpeed.textContent = displaySpeed + ' KM/H';
+
+      } else if (activeCar && raceFinished) {
+        // ✅ Al final el coche gira y derrapa
+        activeCar.group.position.y = 0.1 + Math.sin(time * 20) * 0.03;
+        activeCar.group.rotation.y += dt * 0.8; // Gira sobre su eje
+        activeCar.wheels.forEach(w => { w.rotation.x += dt * 8; });
+        hudSpeed.textContent = '0 KM/H';
+      }
+
+      // ✅ Cámara fija detrás del coche, siempre mirando hacia -Z
+      // La cámara sigue la posición del coche pero SIN girar
+      if (activeCar) {
+        const carPos = activeCar.group.position;
+        // Cámara siempre 10 unidades atrás del coche en Z, 5 de altura
+        const desiredCamPos = new THREE.Vector3(
+          carPos.x,               // misma X (siempre 0)
+          carPos.y + 5,           // altura constante relativa
+          carPos.z + 10           // 10 unidades detrás
+        );
+        const camLerp = 1 - Math.pow(0.001, dt);
+        camera.position.lerp(desiredCamPos, camLerp);
+
+        // Mira hacia adelante del coche (hacia -Z)
+        const desiredLook = new THREE.Vector3(
+          carPos.x,
+          carPos.y + 0.8,
+          carPos.z - 8
+        );
+        camera.lookAt(desiredLook);
+
+        const targetFov = 65 + (currentSpeed / TARGET_SPEED) * 8;
+        camera.fov += (targetFov - camera.fov) * 0.05;
+        camera.updateProjectionMatrix();
+      }
+
+      sparkPool.forEach(spark => {
+        if (spark.visible) {
+          spark.userData.life -= dt;
+          if (spark.userData.life <= 0) {
+            spark.visible = false;
+            spark.material.opacity = 0;
+          } else {
+            spark.material.opacity = Math.max(0, spark.userData.life / 0.6);
+            spark.position.add(spark.userData.vel.clone().multiplyScalar(dt * 60));
+            spark.userData.vel.y -= dt * 1.5;
+            const s = spark.userData.life * 2;
+            spark.scale.setScalar(Math.max(0.2, s));
+          }
+        }
+      });
+
+      bloom.strength = raceActive ? (0.9 + Math.sin(time * 6) * 0.15) : 0.7;
+
+      composer.render();
+    }
+    animate();
+
+    // ============ EVENTOS ============
+    startBtn.addEventListener('click', () => {
+      initAudio();
+      playEngine();
+      speedFlash.classList.add('active');
+      setTimeout(() => speedFlash.classList.remove('active'), 500);
+      phase1.classList.add('hidden');
+      phase2.classList.remove('hidden');
+    });
+
+    repeatBtn.addEventListener('click', () => {
+      startRace(activeCarType);
+    });
+
+    garageBtn.addEventListener('click', () => {
+      removeActiveCar();
+      raceActive = false;
+      raceFinished = false;
+      currentSpeed = 0;
+      phraseActive = false;
+      raceSubtitle.classList.remove('visible');
+      phase4.classList.add('hidden');
+      phase2.classList.remove('hidden');
+      skipBtn.classList.remove('show');
+      camera.position.set(0, 8, 25);
+      camera.lookAt(0, 0, 0);
+      camera.fov = 65;
+      camera.updateProjectionMatrix();
+    });
+
+    skipBtn.addEventListener('click', () => {
+      if (raceActive) {
+        carProgress = 0.99;
+        phraseActive = false;
+        raceSubtitle.classList.remove('visible');
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
