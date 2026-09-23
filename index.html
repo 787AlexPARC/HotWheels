@@ -95,8 +95,27 @@
     display:flex; align-items:center; justify-content:center;
     background:radial-gradient(ellipse at center, rgba(255,255,255,0.06), transparent 70%);
     border-radius:14px;
+    overflow:hidden;
+    position:relative;
   }
-  .car-card .preview-box canvas { width:100%; height:100%; display:block; }
+  .car-card .preview-box img {
+    max-width:90%;
+    max-height:90%;
+    width:auto;
+    height:auto;
+    object-fit:contain;
+    filter:drop-shadow(0 0 10px currentColor);
+    transition:transform 0.3s;
+    display:block;
+  }
+  .car-card:hover .preview-box img {
+    transform:scale(1.12) rotate(-3deg);
+  }
+  .car-card .preview-box .fallback-emoji {
+    font-size: clamp(2.5rem, 12vw, 4rem);
+    line-height:1;
+    filter: drop-shadow(0 0 15px currentColor);
+  }
   .car-card h3 { font-size:clamp(0.7rem, 3vw, 0.95rem); margin-bottom:0.2rem; color:#fff; letter-spacing:0.05em; }
   .car-card p { font-size:clamp(0.5rem, 2vw, 0.6rem); color:#aaa; line-height:1.3; letter-spacing:0.02em; }
   .car-card .glb-name { font-size:clamp(0.4rem, 1.6vw, 0.5rem); color:#555; margin-top:0.3rem; font-family:monospace; }
@@ -280,8 +299,6 @@
       targetLength: isMobile ? 4.5 : 5.0,
       phraseDuration: isMobile ? 4.0 : 4.5,
       targetSpeed: isMobile ? 1/22 : 1/24,
-      previewSize: isMobile ? 200 : 300,
-      previewHeight: isMobile ? 100 : 150,
       camDist: isMobile ? 12 : 11,
       camHeight: isMobile ? 6 : 5.5
     };
@@ -291,31 +308,35 @@
       isTablet ? 'Modo tablet' : 'Modo escritorio';
 
     // ========================================================
-    // 🚗  TUS 9 COCHES
+    // 🚗  TUS 9 COCHES — con propiedad "image" para las previews
+    // ========================================================
+    // 🖼️ PON TUS IMÁGENES EN LA MISMA CARPETA QUE EL index.html
+    //    Ejemplo: raptor.png, kitt.png, jackhammer.png, etc.
+    //    Si la imagen no existe, se muestra un emoji como fallback.
     // ========================================================
     const CARS = [
-      { id: 'raptor', file: 'raptor.glb', name: 'FORD F-150 RAPTOR', desc: 'Camioneta Todoterreno · Un amor que lo supera todo', color: 0xffffff, rotationY: Math.PI,
+      { id: 'raptor', file: 'raptor.glb', image: 'raptor.png', name: 'FORD F-150 RAPTOR', desc: 'Camioneta Todoterreno · Un amor que lo supera todo', color: 0xffffff, rotationY: Math.PI, emoji: '🛻',
       phrases: ["Contigo no existen caminos difíciles ni baches que nos puedan frenar. 🏔️", "Este motor ruge fuerte, pero mi corazón late más rápido cuando te subes.", "Me encanta cómo se siente el viaje cuando tú eres quien maneja mi vida.", "Eres la única persona capaz de hacerme sentir a salvo en cualquier terreno.", "Aunque tengamos tracción en las cuatro ruedas, tú eres mi único agarre seguro.", "Contigo iría hasta el fin del mundo, sin importar si hay carretera o no. ✨", "Llegamos a la meta, pero este viaje todoterreno a tu lado apenas empieza. 🖤"],
         letterTitle: "Raptor · Un amor que lo supera todo", letterBody: "Escribo esto pensando en la fuerza y la seguridad que me transmites cada día. Eres como una Raptor: imponente por fuera, pero el lugar más cómodo y seguro para mí por dentro. Me encanta que no le tengas miedo a los caminos difíciles, que conviertas cualquier obstáculo en una aventura y que siempre encuentres la manera de hacerme sonreír en las curvas de la vida. Gracias por ser mi compañero de ruta, mi protector y mi aventura favorita a cuatro ruedas. Te quiero más de lo que cualquier motor de alta potencia podría llegar a demostrar en toda una vida. 🖤" },
-      { id: 'kitt', file: 'kitt.glb', name: 'K.I.T.T. (Pontiac Firebird)', desc: 'Deportivo Inteligente · Un amor con inteligencia artificial', color: 0xffffff, rotationY: Math.PI,
+      { id: 'kitt', file: 'kitt.glb', image: 'kitt.png', name: 'K.I.T.T. (Pontiac Firebird)', desc: 'Deportivo Inteligente · Un amor con IA', color: 0xffffff, rotationY: Math.PI, emoji: '🚗',
         phrases: ["Mi escáner frontal parpadea en rojo cada vez que te acercas... es mi forma de latir. ❤️‍🔥", "No necesito activar el modo de conducción autónoma si el destino siempre eres tú.", "Aceleremos a fondo con el Turbo Boost, mi corazón va a mil por hora contigo.", "Eres la única persona capaz de tomar el control de mis sistemas sin hackearme.", "Incluso la computadora más avanzada del mundo se queda sin palabras al mirarte.", "Viajar en el tiempo o recorrer carreteras vacías... da igual el rumbo si es a tu lado. ✨", "Llegamos al final de la ruta, pero nuestro viaje apenas está comenzando. 🖤"],
         letterTitle: "K.I.T.T. · Un amor con inteligencia artificial", letterBody: "Escribo esto procesando cada milisegundo que pasamos juntos, guardando cada sonrisa tuya en mi banco de memoria central. Llegaste a mi vida para demostrarme que, detrás de toda mi carrocería blindada y mis sistemas avanzados, hay un motor que ruge con fuerza solo por ti. Contigo aprendí que el viaje más emocionante no se mide en caballos de fuerza ni en velocidad máxima, sino en la tranquilidad de ir en el asiento de al lado compartiendo el mismo camino. Te quiero más de lo que cualquier software o velocímetro podría llegar a calcular en toda una eternidad. 🖤" },
-      { id: 'jackhammer', file: 'jackhammer.glb', name: 'JACK HAMMER', desc: 'Deportivo · Un amor puro y celestial', color: 0xd0d8e0, rotationY: Math.PI,
+      { id: 'jackhammer', file: 'jackhammer.glb', image: 'jackhammer.png', name: 'JACK HAMMER', desc: 'Deportivo · Un amor puro y celestial', color: 0xd0d8e0, rotationY: Math.PI, emoji: '🏎️',
         phrases: ["Oye... cuando te vi llegar con este coche, sentí que algo bonito empezaba ✨","Eres mi ángel de la guarda con ruedas, ¿lo sabías?","Cada vez que aceleras, mi corazón hace lo mismo pero más rápido.","Me encanta cómo me miras cuando crees que no me doy cuenta.","Contigo hasta el silencio se siente como música de fondo.","Si pudiera pedir un deseo, sería más tardes así, contigo.","Llegamos a la meta, pero mi amor por ti no se detiene nunca. 🤍"],
         letterTitle: "Jack Hammer · Un amor celestial", letterBody: "Escribo esto mientras pienso en todas las veces que me has hecho sonreír sin darte cuenta. Eres esa persona que llegó a mi vida como un ángel con ruedas, sin avisar y sin hacer ruido. Contigo aprendí que el amor más bonito es el que se siente tranquilo, seguro, como un motor que ronronea suave. Gracias por cada mirada, por cada silencio cómodo, por cada carcajada a 200 por hora. Te quiero más de lo que este velocímetro puede marcar. 🤍" },
-      { id: 'chevrolet', file: 'chevrolet.glb', name: 'CHEVROLET', desc: 'Muscle Car Azul · Fuerza que enamora', color: 0x2266dd, rotationY: Math.PI,
+      { id: 'chevrolet', file: 'chevrolet.glb', image: 'chevrolet.png', name: 'CHEVROLET', desc: 'Muscle Car Azul · Fuerza que enamora', color: 0x2266dd, rotationY: Math.PI, emoji: '🚙',
         phrases: ["Oye, ese azul te hace ver tan guapo que hasta yo me distraigo 🏎️","Me encanta cuando pisas el acelerador y se te escapa una sonrisa.","Contigo hasta los atascos son una cita perfecta.","Eres mi muscle car favorito: fuerte por fuera, tierno por dentro.","Cada rugido del motor me recuerda lo mucho que me gustas.","Si la vida fuera una carrera, yo te elegiría como copiloto siempre.","Ganamos juntos, pero mi premio real eres tú. 💙"],
         letterTitle: "Chevrolet · Fuerza que enamora", letterBody: "Desde el primer día supe que contigo sería diferente. Eres fuerte como un muscle car, pero tienes un corazón tierno que me derrite. Me encanta cómo ruge ese motor cuando aceleras, cómo te brillan los ojos cuando presumes tus derrapes y cómo te ríes cuando me asusto en las curvas. Eres mi compañero de mil aventuras, mi persona favorita, mi amor a toda velocidad. Gracias por cada kilómetro juntos y por los que nos faltan. Te quiero. 💙" },
-      { id: 'gladiator', file: 'gladiator.glb', name: 'GLADIATOR', desc: 'Jeep Blanco · Aventurero y resistente', color: 0xeaeaea, rotationY: Math.PI,
+      { id: 'gladiator', file: 'gladiator.glb', image: 'gladiator.png', name: 'GLADIATOR', desc: 'Jeep Blanco · Aventurero y resistente', color: 0xeaeaea, rotationY: Math.PI, emoji: '🚙',
         phrases: ["Ese blanco te hace ver tan rudo que hasta me dan ganas de subirme 🚙","Eres mi gladiador favorito, el que siempre pelea por nosotros.","Con este coche hasta el barro se ve bonito, ¿cómo le haces?","Me encanta que no le tengas miedo a los caminos difíciles.","Contigo hasta perdernos es la mejor parte del viaje.","Eres mi compañero de aventuras y mi persona segura.","Llegamos a la meta, pero nuestra aventura sigue. 🤍"],
         letterTitle: "Gladiator · Mi guerrero favorito", letterBody: "Escribo esto pensando en todas las veces que has sido mi guerrero, mi protector, mi persona segura. Me encanta que no le tengas miedo a los caminos difíciles, que conviertas las piedras en rampas y que siempre encuentres la manera de hacerme sonreír. Eres mi gladiador favorito, el que pelea por nosotros incluso cuando no se lo pedimos. Gracias por cada aventura, por cada risa, por cada momento en el que me haces sentir la mujer más afortunada. Te quiero. 🤍" },
-      { id: 'hyperconcept', file: 'hyperconcept.glb', name: 'HYPERCONCEPT', desc: 'Futurista · Amor sin límites', color: 0xe0e8f0, rotationY: Math.PI,
+      { id: 'hyperconcept', file: 'hyperconcept.glb', image: 'hyperconcept.png', name: 'HYPERCONCEPT', desc: 'Futurista · Amor sin límites', color: 0xe0e8f0, rotationY: Math.PI, emoji: '🚀',
         phrases: ["Contigo el futuro se ve brillante... literal, como este coche ✨","Me haces volar más allá de lo que había planeado para mi vida.","Eres mi destino favorito en cualquier galaxia, ¿lo sabías?","Si el amor tuviera turbo, sería exactamente esto que siento.","Aceleras mi corazón a mil por hora y no quiero frenar nunca.","Eres mi ciencia ficción favorita hecha realidad. Te adoro.","Llegamos a la meta, pero quiero seguir viajando contigo. 🤍"],
         letterTitle: "Hyperconcept · Amor a mil por hora", letterBody: "Contigo el amor es de ciencia ficción: acelera mi corazón a mil por hora y no quiero frenar jamás. Eres el destino más hermoso que el universo me pudo dar. Cada vez que te veo, siento que el futuro se vuelve brillante y lleno de posibilidades. Eres mi persona favorita en cualquier galaxia, mi copiloto interestelar. Te amo más allá de lo conocido. 🤍" },
-      { id: 'angels', file: 'angels.glb', name: 'ANGELS', desc: 'Hot Rod Rojo · Pasión ardiente', color: 0xe02222, rotationY: Math.PI,
+      { id: 'angels', file: 'angels.glb', image: 'angels.png', name: 'ANGELS', desc: 'Hot Rod Rojo · Pasión ardiente', color: 0xe02222, rotationY: Math.PI, emoji: '🔥',
         phrases: ["Ese rojo es peligroso... como lo que siento cuando me miras 🔥","Contigo todo arde más bonito, incluso los enojos.","Eres mi chispa, mi fuego, mi persona favorita.","Me encanta cuando aceleras y se te escapa esa sonrisa pícara.","Si el amor quemara, yo ya estaría en llamas por ti.","Contigo hasta el asfalto se derrite. Eres demasiado para mí.","Llegamos, pero mi corazón sigue a toda velocidad por ti. ❤️"],
         letterTitle: "Angels · Pasión ardiente", letterBody: "Escribo esto con el corazón encendido porque tú me haces sentir cosas que no sabía que podía sentir. Eres mi chispa, mi fuego, mi persona favorita para hacer locuras. Me encanta cómo presumes ese motor, cómo te ríes cuando me asusto y cómo me haces sentir viva. Contigo hasta el asfalto se derrite. Gracias por cada momento, por cada caricia, por cada beso robado. Te amo con toda mi alma. ❤️" },
-      { id: 'r8', file: 'r8.glb', name: 'R8', desc: 'Deportivo Plata · Elegancia pura', color: 0xb8c4cc, rotationY: Math.PI,
+      { id: 'r8', file: 'r8.glb', image: 'r8.png', name: 'R8', desc: 'Deportivo Plata · Elegancia pura', color: 0xb8c4cc, rotationY: Math.PI, emoji: '🏎️',
         phrases: ["Ese plateado te hace ver como sacado de una película 🎬","Eres mi protagonista favorito, mi estrella, mi todo.","Me encanta cómo me miras cuando crees que estoy distraída.","Contigo hasta el silencio se siente elegante.","Si el amor tuviera clase, sería exactamente este momento.","Eres mi persona favorita, mi lujo más bonito.","Llegamos, pero yo quiero seguir siendo tu copiloto siempre. 🩶"],
         letterTitle: "R8 · Elegancia pura", letterBody: "Dicen que la elegancia no se compra, se lleva. Y tú la llevas con una naturalidad que me enamora cada día. Eres mi protagonista favorito, mi estrella de cine, mi todo. Me encanta cómo me tratas, cómo me cuidas, cómo me haces sentir la mujer más especial del mundo. Contigo hasta el silencio se siente elegante. Gracias por cada detalle, por cada gesto, por cada momento. Te amo. 🩶" },
     ];
@@ -389,7 +410,8 @@
       antialias: !isMobile,
       powerPreference: 'high-performance',
       alpha: false,
-      stencil: false
+      stencil: false,
+      failIfMajorPerformanceCaveat: false
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(SETTINGS.pixelRatio);
@@ -727,7 +749,8 @@
         grid.appendChild(card);
       });
 
-      requestAnimationFrame(() => generatePreviews());
+      // ✅ Generar previews con imágenes
+      generatePreviews();
     }
 
     function cloneModelForScene(cached) {
@@ -736,55 +759,43 @@
       return clonedScene;
     }
 
+    // ✅ Preview con IMAGEN + fallback a emoji si no existe
     function generatePreviews() {
-      CARS.forEach((car, index) => {
+      CARS.forEach(car => {
         const previewEl = document.getElementById('preview-' + car.id);
         if (!previewEl) return;
 
-        // Escalonar generación en móvil
-        setTimeout(() => {
-          const canvas = document.createElement('canvas');
-          canvas.width = SETTINGS.previewSize;
-          canvas.height = SETTINGS.previewHeight;
-          previewEl.appendChild(canvas);
+        const colorStr = '#' + car.color.toString(16).padStart(6, '0');
 
-          const pRenderer = new THREE.WebGLRenderer({
-            canvas,
-            antialias: false,
-            alpha: true,
-            powerPreference: 'low-power'
-          });
-          pRenderer.setSize(SETTINGS.previewSize, SETTINGS.previewHeight, false);
-          pRenderer.setPixelRatio(1);
-          pRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-          pRenderer.toneMappingExposure = 1.3;
+        // Si el coche tiene imagen definida, la usamos
+        if (car.image) {
+          const img = document.createElement('img');
+          img.src = car.image;
+          img.alt = car.name;
+          img.loading = 'lazy';
+          img.style.filter = `drop-shadow(0 0 10px ${colorStr})`;
 
-          const pScene = new THREE.Scene();
-          pScene.add(new THREE.AmbientLight(0xffffff, 1.5));
-          const pDir = new THREE.DirectionalLight(0xffffff, 2.2);
-          pDir.position.set(5, 10, 7);
-          pScene.add(pDir);
-          const pLightBack = new THREE.DirectionalLight(car.color, 1.8);
-          pLightBack.position.set(-5, 3, -5);
-          pScene.add(pLightBack);
+          // ✅ Fallback: si la imagen no carga, mostramos emoji
+          img.onerror = () => {
+            img.remove();
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'fallback-emoji';
+            emojiSpan.style.color = colorStr;
+            emojiSpan.style.filter = `drop-shadow(0 0 15px ${colorStr})`;
+            emojiSpan.textContent = car.emoji || '🏎️';
+            previewEl.appendChild(emojiSpan);
+          };
 
-          const pCamera = new THREE.PerspectiveCamera(35, 2, 0.1, 100);
-
-          const modelClone = cloneModelForScene(modelCache[car.id]);
-          pScene.add(modelClone);
-
-          const box = new THREE.Box3().setFromObject(modelClone);
-          const size = box.getSize(new THREE.Vector3());
-          const center = box.getCenter(new THREE.Vector3());
-          const maxDim = Math.max(size.x, size.y, size.z);
-          const dist = maxDim * 1.9;
-          pCamera.position.set(center.x + dist * 0.8, center.y + dist * 0.45, center.z + dist * 0.9);
-          pCamera.lookAt(center.x, center.y, center.z);
-
-          pRenderer.render(pScene, pCamera);
-
-          setTimeout(() => pRenderer.dispose(), 100);
-        }, isMobile ? index * 250 : index * 80);
+          previewEl.appendChild(img);
+        } else {
+          // Sin imagen definida → emoji directo
+          const emojiSpan = document.createElement('span');
+          emojiSpan.className = 'fallback-emoji';
+          emojiSpan.style.color = colorStr;
+          emojiSpan.style.filter = `drop-shadow(0 0 15px ${colorStr})`;
+          emojiSpan.textContent = car.emoji || '🏎️';
+          previewEl.appendChild(emojiSpan);
+        }
       });
     }
 
@@ -1137,7 +1148,7 @@
     skipBtn.addEventListener('click', handleSkip);
     skipBtn.addEventListener('touchend', handleSkip, { passive: false });
 
-    // ✅ Resize con debounce (optimizado para rotación de pantalla)
+    // ✅ Resize con debounce
     let resizeTimeout;
     function handleResize() {
       clearTimeout(resizeTimeout);
@@ -1165,7 +1176,7 @@
       setTimeout(() => rotateHint.classList.remove('show'), 5000);
     }
 
-    // ✅ Pausar render cuando la pestaña no está visible (ahorra batería en móvil)
+    // ✅ Pausar render cuando la pestaña no está visible
     document.addEventListener('visibilitychange', () => {
       isPaused = document.hidden;
       if (!isPaused) clock.getDelta();
