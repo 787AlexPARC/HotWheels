@@ -10,112 +10,514 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
 html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family:'Orbitron', sans-serif; color:#fff; }
+
 #scene-container { position:fixed; inset:0; z-index:1; transition:opacity 1.2s ease, filter 1.2s ease, transform 1.2s cubic-bezier(.6,.05,.3,1); }
 #scene-container.hidden-until-start { opacity:0; filter:blur(20px); transform:scale(1.4); }
-.vignette { position:fixed; inset:0; z-index:2; pointer-events:none; background:radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.9) 100%); mix-blend-mode:multiply; }
-.warp-overlay { position:fixed; inset:0; z-index:100; pointer-events:none; background:radial-gradient(circle at center, #fff 0%, #ffcc00 15%, #ff5500 40%, rgba(0,0,0,0.95) 75%); opacity:0; visibility:hidden; transition:opacity 0.15s; }
+
+.vignette { position:fixed; inset:0; z-index:2; pointer-events:none;
+background:radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.9) 100%); mix-blend-mode:multiply; }
+
+.warp-overlay { position:fixed; inset:0; z-index:100; pointer-events:none;
+background:radial-gradient(circle at center, #fff 0%, #ffcc00 15%, #ff5500 40%, rgba(0,0,0,0.95) 75%);
+opacity:0; visibility:hidden; transition:opacity 0.15s; }
+
 .warp-overlay.active { visibility:visible; animation:warpFlash 1.4s cubic-bezier(.5,0,.9,1) forwards; }
-@keyframes warpFlash { 0% { opacity:0; transform:scale(1); } 15% { opacity:0.9; transform:scale(1.05); } 40% { opacity:0.7; transform:scale(1.15); } 100% { opacity:0; transform:scale(2.2); } }
-.warp-rays { position:fixed; inset:0; z-index:99; pointer-events:none; opacity:0; background:repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,0.9) 0deg 0.5deg, transparent 0.5deg 6deg); mix-blend-mode:screen; transform-origin:center; }
+
+@keyframes warpFlash {
+0% { opacity:0; transform:scale(1); }
+15% { opacity:0.9; transform:scale(1.05); }
+40% { opacity:0.7; transform:scale(1.15); }
+100% { opacity:0; transform:scale(2.2); }
+}
+
+.warp-rays { position:fixed; inset:0; z-index:99; pointer-events:none; opacity:0;
+background:repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,0.9) 0deg 0.5deg, transparent 0.5deg 6deg);
+mix-blend-mode:screen; transform-origin:center; }
+
 .warp-rays.active { animation:warpRays 1.2s ease-out forwards; }
-@keyframes warpRays { 0% { opacity:0; transform:scale(0.3); filter:blur(2px); } 30% { opacity:0.85; transform:scale(1); filter:blur(0); } 100% { opacity:0; transform:scale(3); filter:blur(6px); } }
-.speed-flash { position:fixed; inset:0; z-index:60; pointer-events:none; background:radial-gradient(circle, #fff 0%, #ff7700 40%, transparent 70%); opacity:0; transition:opacity 0.15s; }
+
+@keyframes warpRays {
+0% { opacity:0; transform:scale(0.3); filter:blur(2px); }
+30% { opacity:0.85; transform:scale(1); filter:blur(0); }
+100% { opacity:0; transform:scale(3); filter:blur(6px); }
+}
+
+.speed-flash { position:fixed; inset:0; z-index:60; pointer-events:none;
+background:radial-gradient(circle, #fff 0%, #ff7700 40%, transparent 70%);
+opacity:0; transition:opacity 0.15s; }
+
 .speed-flash.active { opacity:0.95; animation:flashOut 0.5s forwards; }
+
 @keyframes flashOut { 0%{opacity:0.95;} 100%{opacity:0;} }
-.phase { position:fixed; inset:0; z-index:10; display:flex; flex-direction:column; justify-content:center; align-items:center; transition:opacity 0.7s ease, visibility 0.7s; }
+
+.phase { position:fixed; inset:0; z-index:10; display:flex; flex-direction:column;
+justify-content:center; align-items:center; transition:opacity 0.7s ease, visibility 0.7s; }
+
 .phase.hidden { opacity:0; visibility:hidden; pointer-events:none; }
-.hw-logo { position:absolute; pointer-events:none; z-index:15; opacity:0.95; filter:drop-shadow(0 0 20px rgba(255,120,0,0.9)) drop-shadow(0 0 45px rgba(255,60,0,0.6)); animation:logoFloat 4.5s ease-in-out infinite; }
-@keyframes logoFloat { 0%,100% { transform:translateY(0) rotate(-6deg); } 50% { transform:translateY(-12px) rotate(-2deg) scale(1.06); } }
+
+.hw-logo {
+position:absolute; pointer-events:none; z-index:15; opacity:0.95;
+filter:drop-shadow(0 0 20px rgba(255,120,0,0.9)) drop-shadow(0 0 45px rgba(255,60,0,0.6));
+animation:logoFloat 4.5s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+0%,100% { transform:translateY(0) rotate(-6deg); }
+50% { transform:translateY(-12px) rotate(-2deg) scale(1.06); }
+}
+
 .hw-logo.corner-tl { top:3vh; left:2vw; width:clamp(70px, 9vw, 130px); }
 .hw-logo.corner-tr { top:3vh; right:2vw; width:clamp(70px, 9vw, 130px); animation-delay:0.8s; }
 .hw-logo.corner-bl { bottom:3vh; left:2vw; width:clamp(60px, 7vw, 110px); animation-delay:1.2s; opacity:0.75; }
 .hw-logo.corner-br { bottom:3vh; right:2vw; width:clamp(60px, 7vw, 110px); animation-delay:0.4s; opacity:0.75; }
+
 .hw-logo.big-center { position:relative; width:clamp(120px, 18vw, 220px); margin-bottom:1.2rem; }
-.hw-title { font-family:'Racing Sans One', 'Bungee', sans-serif; font-size:clamp(2.5rem, 9vw, 7rem); font-weight:400; letter-spacing:0.02em; line-height:0.95; text-align:center; padding:0 1rem; position:relative; background:linear-gradient(180deg, #ffe066 0%, #ffaa00 30%, #ff5500 65%, #d41414 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 4px 0 #7a0000) drop-shadow(0 0 30px rgba(255,100,0,0.9)); transform:perspective(600px) rotateX(-8deg) skewX(-3deg); animation:titlePulse 2.4s ease-in-out infinite; }
-@keyframes titlePulse { 0%,100% { filter:drop-shadow(0 4px 0 #7a0000) drop-shadow(0 0 25px rgba(255,100,0,0.8)); } 50% { filter:drop-shadow(0 4px 0 #7a0000) drop-shadow(0 0 45px rgba(255,180,0,1)); } }
-.hw-title .accent { display:block; font-size:0.45em; letter-spacing:0.35em; color:#fff; -webkit-text-fill-color:#fff; background:none; margin-top:0.4rem; text-shadow:0 0 20px #00c8ff, 0 0 40px #0088ff; font-family:'Orbitron', sans-serif; font-weight:900; transform:none; }
-.hw-flames { font-size:clamp(1.2rem, 2.4vw, 2rem); margin-top:-0.3rem; filter:drop-shadow(0 0 15px #ff6600); animation:flameFlicker 0.6s infinite alternate; }
+
+.hw-title {
+font-family:'Racing Sans One', 'Bungee', sans-serif;
+font-size:clamp(2.5rem, 9vw, 7rem); font-weight:400;
+letter-spacing:0.02em; line-height:0.95; text-align:center; padding:0 1rem; position:relative;
+background:linear-gradient(180deg, #ffe066 0%, #ffaa00 30%, #ff5500 65%, #d41414 100%);
+-webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+filter:drop-shadow(0 4px 0 #7a0000) drop-shadow(0 0 30px rgba(255,100,0,0.9));
+transform:perspective(600px) rotateX(-8deg) skewX(-3deg);
+animation:titlePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+0%,100% { filter:drop-shadow(0 4px 0 #7a0000) drop-shadow(0 0 25px rgba(255,100,0,0.8)); }
+50% { filter:drop-shadow(0 4px 0 #7a0000) drop-shadow(0 0 45px rgba(255,180,0,1)); }
+}
+
+.hw-title .accent {
+display:block; font-size:0.45em; letter-spacing:0.35em; color:#fff; -webkit-text-fill-color:#fff;
+background:none; margin-top:0.4rem;
+text-shadow:0 0 20px #00c8ff, 0 0 40px #0088ff;
+font-family:'Orbitron', sans-serif; font-weight:900; transform:none;
+}
+
+.hw-flames { font-size:clamp(1.2rem, 2.4vw, 2rem); margin-top:-0.3rem;
+filter:drop-shadow(0 0 15px #ff6600); animation:flameFlicker 0.6s infinite alternate; }
+
 @keyframes flameFlicker { from { transform:scale(1) rotate(-2deg); } to { transform:scale(1.08) rotate(2deg); } }
-.hw-subtitle { font-family:'Orbitron', sans-serif; font-size:clamp(0.65rem, 1.3vw, 1rem); color:#ffe066; letter-spacing:0.4em; text-transform:uppercase; margin-top:0.8rem; margin-bottom:2.5rem; text-shadow:0 0 15px #ff7700, 0 0 30px #ff3300; text-align:center; padding:0 1rem; }
-.start-btn { position:relative; padding:1rem 3rem; font-family:'Racing Sans One', 'Orbitron', sans-serif; font-size:clamp(1rem, 1.8vw, 1.7rem); letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; color:#fff; text-shadow:0 2px 0 #7a0000, 0 0 10px #ffcc00; border:3px solid #ffcc00; border-radius:60px; background:linear-gradient(180deg, #ff8800 0%, #ff4400 50%, #cc0000 100%); box-shadow:0 0 30px #ff6600, 0 0 60px #ff3300, inset 0 0 25px rgba(255,255,255,0.35), inset 0 -6px 0 rgba(0,0,0,0.25); transition:transform 0.15s, box-shadow 0.3s; animation:btnPulse 1.4s infinite alternate; overflow:hidden; }
-.start-btn::before { content:""; position:absolute; top:0; left:-60%; width:60%; height:100%; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.65), transparent); transform:skewX(-25deg); animation:shine 2.8s infinite; }
+
+.hw-subtitle { font-family:'Orbitron', sans-serif; font-size:clamp(0.65rem, 1.3vw, 1rem);
+color:#ffe066; letter-spacing:0.4em; text-transform:uppercase; margin-top:0.8rem; margin-bottom:2.5rem;
+text-shadow:0 0 15px #ff7700, 0 0 30px #ff3300; text-align:center; padding:0 1rem; }
+
+.start-btn { position:relative; padding:1rem 3rem;
+font-family:'Racing Sans One', 'Orbitron', sans-serif;
+font-size:clamp(1rem, 1.8vw, 1.7rem); letter-spacing:0.15em; text-transform:uppercase;
+cursor:pointer; color:#fff; text-shadow:0 2px 0 #7a0000, 0 0 10px #ffcc00;
+border:3px solid #ffcc00; border-radius:60px;
+background:linear-gradient(180deg, #ff8800 0%, #ff4400 50%, #cc0000 100%);
+box-shadow:0 0 30px #ff6600, 0 0 60px #ff3300, inset 0 0 25px rgba(255,255,255,0.35), inset 0 -6px 0 rgba(0,0,0,0.25);
+transition:transform 0.15s, box-shadow 0.3s; animation:btnPulse 1.4s infinite alternate; overflow:hidden; }
+
+.start-btn::before { content:""; position:absolute; top:0; left:-60%; width:60%; height:100%;
+background:linear-gradient(90deg, transparent, rgba(255,255,255,0.65), transparent);
+transform:skewX(-25deg); animation:shine 2.8s infinite; }
+
 @keyframes shine { 0% { left:-60%; } 60%,100% { left:140%; } }
+
 .start-btn:hover { transform:scale(1.08); }
 .start-btn:active { transform:scale(0.95); }
-@keyframes btnPulse { from { box-shadow:0 0 20px #ff6600, 0 0 40px #ff3300, inset 0 0 25px rgba(255,255,255,0.35), inset 0 -6px 0 rgba(0,0,0,0.25); } to { box-shadow:0 0 45px #ffcc00, 0 0 90px #ff6600, inset 0 0 25px rgba(255,255,255,0.35), inset 0 -6px 0 rgba(0,0,0,0.25); } }
+
+@keyframes btnPulse {
+from { box-shadow:0 0 20px #ff6600, 0 0 40px #ff3300, inset 0 0 25px rgba(255,255,255,0.35), inset 0 -6px 0 rgba(0,0,0,0.25); }
+to { box-shadow:0 0 45px #ffcc00, 0 0 90px #ff6600, inset 0 0 25px rgba(255,255,255,0.35), inset 0 -6px 0 rgba(0,0,0,0.25); }
+}
+
 #phase1 { background:#000; justify-content:center; align-items:center; gap:0.4rem; }
 #phase2 { background:transparent; overflow:hidden; pointer-events:none; }
-.garage-title { font-family:'Racing Sans One', sans-serif; font-size:clamp(2rem, 6vw, 4.5rem); letter-spacing:0.05em; text-align:center; position:absolute; top:3vh; left:0; right:0; padding:0 1rem; background:linear-gradient(180deg, #ffe066 0%, #ff9900 40%, #ff2200 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 3px 0 #7a0000) drop-shadow(0 0 25px rgba(255,100,0,0.9)); transform:perspective(600px) rotateX(-6deg) skewX(-2deg); z-index:20; }
-.garage-sub { font-family:'Orbitron', sans-serif; font-size:clamp(0.6rem, 1.1vw, 0.85rem); color:#ffe066; letter-spacing:0.3em; text-transform:uppercase; position:absolute; top:calc(3vh + clamp(2.2rem, 6.5vw, 5rem)); left:0; right:0; text-align:center; padding:0 1rem; text-shadow:0 0 15px #ff7700; z-index:20; }
+
+.garage-title {
+font-family:'Racing Sans One', sans-serif; font-size:clamp(2rem, 6vw, 4.5rem); letter-spacing:0.05em;
+text-align:center; position:absolute; top:3vh; left:0; right:0; padding:0 1rem;
+background:linear-gradient(180deg, #ffe066 0%, #ff9900 40%, #ff2200 100%);
+-webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+filter:drop-shadow(0 3px 0 #7a0000) drop-shadow(0 0 25px rgba(255,100,0,0.9));
+transform:perspective(600px) rotateX(-6deg) skewX(-2deg); z-index:20;
+}
+
+.garage-sub { font-family:'Orbitron', sans-serif; font-size:clamp(0.6rem, 1.1vw, 0.85rem);
+color:#ffe066; letter-spacing:0.3em; text-transform:uppercase;
+position:absolute; top:calc(3vh + clamp(2.2rem, 6.5vw, 5rem));
+left:0; right:0; text-align:center; padding:0 1rem; text-shadow:0 0 15px #ff7700; z-index:20; }
+
 #phase3 { background:transparent; justify-content:flex-start; padding-top:4vh; pointer-events:none; }
-.hud-top { display:flex; justify-content:space-between; align-items:center; width:92%; max-width:1100px; pointer-events:none; gap:0.5rem; }
-.hud-lap { font-family:'Racing Sans One', sans-serif; font-size:clamp(0.7rem, 1.3vw, 1.1rem); letter-spacing:0.12em; color:#ffe066; text-shadow:0 0 15px #ff5500, 0 2px 0 #7a0000; background:rgba(0,0,0,0.6); padding:0.4rem 1rem; border-radius:40px; border:2px solid #ff9900; white-space:nowrap; }
-.hud-speed { font-family:'Orbitron', sans-serif; font-weight:900; font-size:clamp(0.7rem, 1.3vw, 1.1rem); letter-spacing:0.12em; color:#00e0ff; text-shadow:0 0 15px #00aaff, 0 0 30px #0088ff; background:rgba(0,0,0,0.6); padding:0.4rem 1rem; border-radius:40px; border:2px solid #00c8ff; white-space:nowrap; }
-.race-subtitle-wrap { position:absolute; top:22%; left:0; right:0; display:flex; justify-content:center; pointer-events:none; padding:0 0.8rem; }
-.race-subtitle { font-family:'Orbitron', sans-serif; font-size:clamp(0.85rem, 2.2vw, 1.9rem); font-weight:900; letter-spacing:0.03em; text-align:center; padding:0.6rem 1.4rem; border-radius:60px; background:rgba(0,0,0,0.75); border-left:5px solid #ff7700; border-right:5px solid #ff7700; white-space:normal; max-width:92vw; line-height:1.25; animation:subtitlePop 0.5s ease-out; opacity:0; transition:opacity 0.3s; }
+
+.hud-top { display:flex; justify-content:space-between; align-items:center;
+width:92%; max-width:1100px; pointer-events:none; gap:0.5rem; }
+
+.hud-lap { font-family:'Racing Sans One', sans-serif; font-size:clamp(0.7rem, 1.3vw, 1.1rem);
+letter-spacing:0.12em; color:#ffe066; text-shadow:0 0 15px #ff5500, 0 2px 0 #7a0000;
+background:rgba(0,0,0,0.6); padding:0.4rem 1rem; border-radius:40px; border:2px solid #ff9900; white-space:nowrap; }
+
+.hud-speed { font-family:'Orbitron', sans-serif; font-weight:900; font-size:clamp(0.7rem, 1.3vw, 1.1rem);
+letter-spacing:0.12em; color:#00e0ff; text-shadow:0 0 15px #00aaff, 0 0 30px #0088ff;
+background:rgba(0,0,0,0.6); padding:0.4rem 1rem; border-radius:40px; border:2px solid #00c8ff; white-space:nowrap; }
+
+.race-subtitle-wrap { position:absolute; top:22%; left:0; right:0;
+display:flex; justify-content:center; pointer-events:none; padding:0 0.8rem; }
+
+.race-subtitle { font-family:'Orbitron', sans-serif; font-size:clamp(0.85rem, 2.2vw, 1.9rem);
+font-weight:900; letter-spacing:0.03em; text-align:center; padding:0.6rem 1.4rem; border-radius:60px;
+background:rgba(0,0,0,0.75); border-left:5px solid #ff7700; border-right:5px solid #ff7700;
+white-space:normal; max-width:92vw; line-height:1.25;
+animation:subtitlePop 0.5s ease-out; opacity:0; transition:opacity 0.3s; }
+
 .race-subtitle.visible { opacity:1; }
-@keyframes subtitlePop { 0% { transform:scale(0.4); opacity:0; filter:blur(8px); } 70% { transform:scale(1.08); opacity:1; filter:blur(0); } 100% { transform:scale(1); } }
-.race-progress-wrap { position:absolute; bottom:5vh; left:50%; transform:translateX(-50%); width:80%; max-width:700px; height:10px; border-radius:10px; background:rgba(255,255,255,0.12); overflow:hidden; border:2px solid #ff990055; }
-.race-progress { height:100%; width:0%; background:linear-gradient(90deg, #ff2200, #ff9900, #ffcc00); box-shadow:0 0 20px #ffaa00, 0 0 40px #ff6600; transition:width 0.2s linear; }
+
+@keyframes subtitlePop { 0% { transform:scale(0.4); opacity:0; filter:blur(8px); }
+70% { transform:scale(1.08); opacity:1; filter:blur(0); } 100% { transform:scale(1); } }
+
+.race-progress-wrap { position:absolute; bottom:5vh; left:50%; transform:translateX(-50%);
+width:80%; max-width:700px; height:10px; border-radius:10px;
+background:rgba(255,255,255,0.12); overflow:hidden; border:2px solid #ff990055; }
+
+.race-progress { height:100%; width:0%;
+background:linear-gradient(90deg, #ff2200, #ff9900, #ffcc00);
+box-shadow:0 0 20px #ffaa00, 0 0 40px #ff6600; transition:width 0.2s linear; }
+
 #phase4 { background:rgba(0,0,0,0.9); backdrop-filter:blur(12px); padding:1rem; overflow-y:auto; }
-.letter-layout { display:flex; gap:1.5rem; align-items:center; justify-content:center; width:100%; max-width:1200px; flex-wrap:wrap; padding:0.5rem; }
-.letter-card { width:min(500px, 92vw); padding:clamp(1.4rem, 3vw, 2.4rem); border-radius:28px; background:linear-gradient(160deg, #1a0d00, #050505); border:3px solid #ffaa00; text-align:center; animation:cardIn 0.7s cubic-bezier(.2,.9,.3,1.3); position:relative; max-height:80vh; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#ff7700 #111; }
-.letter-card::before { content:""; position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:60%; height:6px; background:linear-gradient(90deg, transparent, #ffcc00, #ff4400, #ffcc00, transparent); border-radius:3px; filter:blur(1px); }
+
+.letter-layout { display:flex; gap:1.5rem; align-items:center; justify-content:center;
+width:100%; max-width:1200px; flex-wrap:wrap; padding:0.5rem; }
+
+.letter-card { width:min(500px, 92vw); padding:clamp(1.4rem, 3vw, 2.4rem);
+border-radius:28px; background:linear-gradient(160deg, #1a0d00, #050505);
+border:3px solid #ffaa00; text-align:center; animation:cardIn 0.7s cubic-bezier(.2,.9,.3,1.3);
+position:relative; max-height:80vh; overflow-y:auto;
+scrollbar-width:thin; scrollbar-color:#ff7700 #111; }
+
+.letter-card::before { content:""; position:absolute; top:-15px; left:50%; transform:translateX(-50%);
+width:60%; height:6px; background:linear-gradient(90deg, transparent, #ffcc00, #ff4400, #ffcc00, transparent);
+border-radius:3px; filter:blur(1px); }
+
 .letter-card::-webkit-scrollbar { width:6px; }
 .letter-card::-webkit-scrollbar-track { background:#111; border-radius:4px; }
 .letter-card::-webkit-scrollbar-thumb { background:linear-gradient(180deg,#ff7700,#ffaa00); border-radius:4px; }
-@keyframes cardIn { 0% { transform:scale(0.6) translateY(40px) rotateX(15deg); opacity:0; } 100% { transform:scale(1) translateY(0) rotateX(0); opacity:1; } }
-.letter-card h2 { font-family:'Racing Sans One', sans-serif; font-size:clamp(1.2rem, 2.6vw, 2rem); margin-bottom:1rem; letter-spacing:0.04em; text-shadow:0 0 20px currentColor, 0 2px 0 rgba(0,0,0,0.6); }
-.letter-card p { font-size:clamp(0.75rem, 1.3vw, 1rem); line-height:1.65; color:#e8e8e8; margin-bottom:1.6rem; font-weight:400; letter-spacing:0.02em; }
+
+@keyframes cardIn { 0% { transform:scale(0.6) translateY(40px) rotateX(15deg); opacity:0; }
+100% { transform:scale(1) translateY(0) rotateX(0); opacity:1; } }
+
+.letter-card h2 { font-family:'Racing Sans One', sans-serif; font-size:clamp(1.2rem, 2.6vw, 2rem);
+margin-bottom:1rem; letter-spacing:0.04em; text-shadow:0 0 20px currentColor, 0 2px 0 rgba(0,0,0,0.6); }
+
+.letter-card p { font-size:clamp(0.75rem, 1.3vw, 1rem); line-height:1.65; color:#e8e8e8;
+margin-bottom:1.6rem; font-weight:400; letter-spacing:0.02em; }
+
 .letter-buttons { display:flex; gap:0.7rem; justify-content:center; flex-wrap:wrap; }
-.letter-buttons button { font-family:'Orbitron', sans-serif; font-size:clamp(0.7rem, 1.2vw, 0.95rem); font-weight:700; letter-spacing:0.08em; padding:0.7rem 1.4rem; border-radius:50px; cursor:pointer; background:transparent; color:#fff; border:2px solid #666; transition:all 0.25s; }
+
+.letter-buttons button { font-family:'Orbitron', sans-serif; font-size:clamp(0.7rem, 1.2vw, 0.95rem);
+font-weight:700; letter-spacing:0.08em; padding:0.7rem 1.4rem; border-radius:50px; cursor:pointer;
+background:transparent; color:#fff; border:2px solid #666; transition:all 0.25s; }
+
 .letter-buttons button:hover { transform:translateY(-3px); }
+
 .letter-buttons .repeat-btn { border-color:#ffaa00; color:#ffcc00; }
 .letter-buttons .repeat-btn:hover { box-shadow:0 0 30px #ffaa00; background:rgba(255,170,0,0.15); }
+
 .letter-buttons .garage-btn { border-color:#00c8ff; color:#00e0ff; }
 .letter-buttons .garage-btn:hover { box-shadow:0 0 30px #00c8ff; background:rgba(0,200,255,0.15); }
-.model-viewer { width:min(500px, 92vw); height:min(420px, 55vh); border-radius:28px; background:radial-gradient(ellipse at center, rgba(255,119,0,0.1), rgba(0,0,0,0.95) 70%); border:3px solid #ff7700; box-shadow:0 0 60px rgba(255,119,0,0.5), inset 0 0 60px rgba(255,119,0,0.12); position:relative; overflow:hidden; animation:cardIn 0.9s cubic-bezier(.2,.9,.3,1.3); }
+
+.model-viewer { width:min(500px, 92vw); height:min(420px, 55vh); border-radius:28px;
+background:radial-gradient(ellipse at center, rgba(255,119,0,0.1), rgba(0,0,0,0.95) 70%);
+border:3px solid #ff7700;
+box-shadow:0 0 60px rgba(255,119,0,0.5), inset 0 0 60px rgba(255,119,0,0.12);
+position:relative; overflow:hidden; animation:cardIn 0.9s cubic-bezier(.2,.9,.3,1.3); }
+
 .model-viewer canvas { width:100% !important; height:100% !important; display:block; }
-.model-viewer .viewer-label { position:absolute; top:12px; left:50%; transform:translateX(-50%); font-family:'Racing Sans One', sans-serif; font-size:clamp(0.6rem, 0.95vw, 0.8rem); letter-spacing:0.25em; color:#ffe066; text-shadow:0 0 10px #ff7700; text-transform:uppercase; z-index:5; pointer-events:none; }
-#loader { position:fixed; inset:0; z-index:200; background:#000; display:flex; justify-content:center; align-items:center; flex-direction:column; gap:0.9rem; transition:opacity 0.6s; padding:1rem; }
+
+.model-viewer .viewer-label { position:absolute; top:12px; left:50%; transform:translateX(-50%);
+font-family:'Racing Sans One', sans-serif; font-size:clamp(0.6rem, 0.95vw, 0.8rem);
+letter-spacing:0.25em; color:#ffe066; text-shadow:0 0 10px #ff7700;
+text-transform:uppercase; z-index:5; pointer-events:none; }
+
+#loader { position:fixed; inset:0; z-index:200; background:#000;
+display:flex; justify-content:center; align-items:center; flex-direction:column; gap:0.9rem;
+transition:opacity 0.6s; padding:1rem; }
+
 #loader.hidden { opacity:0; pointer-events:none; }
-.loader-logo-space { width:min(320px, 75vw); height:140px; margin-bottom:1rem; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
-.loader-logo-space img { max-width:100%; max-height:100%; object-fit:contain; filter:drop-shadow(0 0 25px rgba(255,119,0,0.85)); animation:logoPulse 2s ease-in-out infinite; }
-@keyframes logoPulse { 0%, 100% { filter:drop-shadow(0 0 20px rgba(255,119,0,0.7)); transform:scale(1); } 50% { filter:drop-shadow(0 0 50px rgba(255,150,0,1)); transform:scale(1.06); } }
-.loader-logo-space .placeholder-text { color:#ff7700; font-size:0.65rem; letter-spacing:0.25em; opacity:0.45; text-align:center; position:absolute; padding:0 0.5rem; }
-.spinner { width:46px; height:46px; border-radius:50%; border:3px solid #222; border-top-color:#ff7700; animation:spin 1s linear infinite; }
+
+.loader-logo-space { width:min(320px, 75vw); height:140px; margin-bottom:1rem;
+display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+
+.loader-logo-space img { max-width:100%; max-height:100%; object-fit:contain;
+filter:drop-shadow(0 0 25px rgba(255,119,0,0.85)); animation:logoPulse 2s ease-in-out infinite; }
+
+@keyframes logoPulse {
+0%, 100% { filter:drop-shadow(0 0 20px rgba(255,119,0,0.7)); transform:scale(1); }
+50% { filter:drop-shadow(0 0 50px rgba(255,150,0,1)); transform:scale(1.06); }
+}
+
+.loader-logo-space .placeholder-text { color:#ff7700; font-size:0.65rem; letter-spacing:0.25em;
+opacity:0.45; text-align:center; position:absolute; padding:0 0.5rem; }
+
+.spinner { width:46px; height:46px; border-radius:50%; border:3px solid #222;
+border-top-color:#ff7700; animation:spin 1s linear infinite; }
+
 @keyframes spin { to { transform:rotate(360deg); } }
-#loader p { font-family:'Racing Sans One', sans-serif; color:#ffaa00; letter-spacing:0.28em; font-size:clamp(0.8rem, 1.3vw, 1rem); text-align:center; }
+
+#loader p { font-family:'Racing Sans One', sans-serif; color:#ffaa00;
+letter-spacing:0.28em; font-size:clamp(0.8rem, 1.3vw, 1rem); text-align:center; }
+
 #loader .progress-text { color:#888; font-size:0.7rem; letter-spacing:0.2em; }
+
 .progress-bar-wrap { width:min(400px, 80vw); height:6px; background:#222; border-radius:3px; overflow:hidden; }
-.progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#ff2200,#ff9900,#ffcc00); box-shadow:0 0 12px #ffaa00; transition:width 0.2s; }
-.skip-btn { position:fixed; bottom:20px; right:20px; z-index:50; background:rgba(0,0,0,0.7); color:#ffcc00; border:2px solid #ff7700; font-family:'Orbitron', sans-serif; padding:0.5rem 1rem; border-radius:40px; cursor:pointer; font-size:0.75rem; letter-spacing:0.15em; opacity:0; transition:opacity 0.3s; }
+
+.progress-bar { height:100%; width:0%;
+background:linear-gradient(90deg,#ff2200,#ff9900,#ffcc00);
+box-shadow:0 0 12px #ffaa00; transition:width 0.2s; }
+
+.skip-btn { position:fixed; bottom:20px; right:20px; z-index:50;
+background:rgba(0,0,0,0.7); color:#ffcc00; border:2px solid #ff7700;
+font-family:'Orbitron', sans-serif; padding:0.5rem 1rem; border-radius:40px; cursor:pointer;
+font-size:0.75rem; letter-spacing:0.15em; opacity:0; transition:opacity 0.3s; }
+
 .skip-btn.show { opacity:1; }
 
-/* 🎵 BOTÓN DE MUTE */
-.mute-btn {
-  position:fixed; bottom:20px; left:20px; z-index:50;
-  background:rgba(0,0,0,0.7); color:#ffcc00;
-  border:2px solid #ff7700; border-radius:50%;
-  width:48px; height:48px; font-size:1.3rem;
-  cursor:pointer; transition:all 0.25s;
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:0 0 20px rgba(255,119,0,0.5);
-  opacity:0; pointer-events:none;
-}
-.mute-btn.show { opacity:1; pointer-events:auto; }
-.mute-btn:hover { transform:scale(1.1); box-shadow:0 0 30px #ffaa00; }
-.mute-btn.muted { color:#666; border-color:#444; box-shadow:none; }
-
 @media (max-width: 768px) {
-  .letter-layout { flex-direction:column; gap:1rem; }
-  .letter-card { max-height:none; }
-  .model-viewer { height:min(320px, 45vh); }
-  .hud-top { width:96%; }
-  .race-progress-wrap { width:88%; bottom:4vh; }
+.letter-layout { flex-direction:column; gap:1rem; }
+.letter-card { max-height:none; }
+.model-viewer { height:min(320px, 45vh); }
+.hud-top { width:96%; }
+.race-progress-wrap { width:88%; bottom:4vh; }
 }
+
 @media (max-width: 480px) {
-  .letter-buttons button { padding:0.6rem 1.1rem; font-size:0.7rem; }
+.letter-buttons button { padding:0.6rem 1.1rem; font-size:0.7rem; }
+}
+
+/* ============================================================ */
+/* PANEL DE PERSONALIZACIÓN                                     */
+/* ============================================================ */
+
+.customize-fab {
+  position:fixed; bottom:24px; left:24px; z-index:80;
+  width:56px; height:56px; border-radius:50%;
+  background:linear-gradient(135deg, #ff7700, #ff2200);
+  border:3px solid #ffcc00; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.5rem; box-shadow:0 0 30px #ff6600, 0 0 60px #ff3300;
+  transition:transform 0.3s, box-shadow 0.3s;
+  animation:btnPulse 2s infinite alternate;
+  color:#fff;
+}
+.customize-fab:hover { transform:scale(1.12) rotate(15deg); }
+.customize-fab.hidden { display:none; }
+
+/* 🎵 BOTÓN DE MÚSICA */
+.music-fab {
+  position:fixed; bottom:24px; right:24px; z-index:80;
+  width:56px; height:56px; border-radius:50%;
+  background:linear-gradient(135deg, #00c8ff, #0066cc);
+  border:3px solid #00e0ff; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.4rem; box-shadow:0 0 30px #00c8ff, 0 0 60px #0066cc;
+  transition:transform 0.3s, box-shadow 0.3s, background 0.3s;
+  color:#fff;
+}
+.music-fab:hover { transform:scale(1.12); box-shadow:0 0 45px #00e0ff, 0 0 80px #00c8ff; }
+.music-fab.muted {
+  background:linear-gradient(135deg, #555, #222);
+  border-color:#666;
+  box-shadow:0 0 15px rgba(0,0,0,0.6);
+}
+.music-fab.hidden { display:none; }
+.music-fab .music-icon { pointer-events:none; display:block; line-height:1; }
+
+/* Slider de volumen emergente */
+.music-volume-slider {
+  position:fixed; bottom:90px; right:24px; z-index:81;
+  width:56px; height:180px;
+  background:linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,20,40,0.95));
+  border:2px solid #00c8ff; border-radius:28px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:12px 0; gap:8px;
+  opacity:0; visibility:hidden; transform:translateY(20px);
+  transition:opacity 0.25s, visibility 0.25s, transform 0.25s;
+  box-shadow:0 0 30px #00c8ff66;
+}
+.music-volume-slider.show { opacity:1; visibility:visible; transform:translateY(0); }
+.music-volume-slider input[type="range"] {
+  -webkit-appearance:none; appearance:none;
+  width:140px; height:6px; border-radius:3px;
+  background:linear-gradient(90deg, #00c8ff, #0066cc);
+  outline:none; transform:rotate(-90deg);
+  margin:60px 0;
+}
+.music-volume-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance:none; appearance:none;
+  width:20px; height:20px; border-radius:50%;
+  background:radial-gradient(circle, #fff 20%, #00e0ff 70%);
+  border:2px solid #00c8ff; cursor:pointer;
+  box-shadow:0 0 15px #00e0ff;
+}
+.music-volume-slider input[type="range"]::-moz-range-thumb {
+  width:20px; height:20px; border-radius:50%;
+  background:radial-gradient(circle, #fff 20%, #00e0ff 70%);
+  border:2px solid #00c8ff; cursor:pointer;
+  box-shadow:0 0 15px #00e0ff;
+}
+.music-volume-slider .vol-label {
+  font-family:'Orbitron', sans-serif; font-size:0.55rem;
+  letter-spacing:0.15em; color:#00e0ff; text-shadow:0 0 8px #00c8ff;
+}
+
+.customize-modal {
+  position:fixed; inset:0; z-index:300;
+  background:rgba(0,0,0,0.92); backdrop-filter:blur(12px);
+  display:flex; align-items:center; justify-content:center;
+  padding:1rem; opacity:0; visibility:hidden;
+  transition:opacity 0.4s, visibility 0.4s;
+  overflow-y:auto;
+}
+.customize-modal.open { opacity:1; visibility:visible; }
+
+.customize-panel {
+  width:min(680px, 96vw); max-height:92vh; overflow-y:auto;
+  background:linear-gradient(160deg, #1a0d00, #050505);
+  border:3px solid #ffaa00; border-radius:28px;
+  padding:clamp(1.2rem, 3vw, 2rem);
+  box-shadow:0 0 80px #ff6600, inset 0 0 60px rgba(255,119,0,0.08);
+  animation:cardIn 0.5s cubic-bezier(.2,.9,.3,1.3);
+  scrollbar-width:thin; scrollbar-color:#ff7700 #111;
+}
+.customize-panel::-webkit-scrollbar { width:8px; }
+.customize-panel::-webkit-scrollbar-track { background:#111; border-radius:4px; }
+.customize-panel::-webkit-scrollbar-thumb {
+  background:linear-gradient(180deg,#ff7700,#ffaa00); border-radius:4px;
+}
+
+.customize-panel h2 {
+  font-family:'Racing Sans One', sans-serif;
+  font-size:clamp(1.4rem, 3vw, 2.2rem);
+  letter-spacing:0.05em; text-align:center; margin-bottom:0.3rem;
+  background:linear-gradient(180deg, #ffe066, #ff5500);
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 20px rgba(255,100,0,0.8));
+}
+.customize-panel .sub {
+  text-align:center; color:#ffe066; font-size:0.75rem;
+  letter-spacing:0.25em; text-transform:uppercase;
+  margin-bottom:1.5rem; text-shadow:0 0 10px #ff7700;
+}
+
+.customize-field { margin-bottom:1.1rem; }
+.customize-field label {
+  display:block; font-family:'Orbitron', sans-serif;
+  font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase;
+  color:#ffcc00; margin-bottom:0.4rem; font-weight:700;
+}
+.customize-field select,
+.customize-field input,
+.customize-field textarea {
+  width:100%; padding:0.7rem 0.9rem;
+  background:rgba(0,0,0,0.6); color:#fff;
+  border:2px solid #ff7700; border-radius:14px;
+  font-family:'Orbitron', sans-serif; font-size:0.85rem;
+  outline:none; transition:border-color 0.25s, box-shadow 0.25s;
+  resize:vertical;
+}
+.customize-field select:focus,
+.customize-field input:focus,
+.customize-field textarea:focus {
+  border-color:#ffcc00; box-shadow:0 0 20px #ff770066;
+}
+.customize-field textarea { min-height:90px; line-height:1.5; }
+.customize-field .hint {
+  font-size:0.65rem; color:#888; margin-top:0.3rem;
+  letter-spacing:0.05em;
+}
+
+.phrase-editor-group {
+  display:flex; flex-direction:column; gap:0.5rem;
+  padding:0.8rem; background:rgba(255,119,0,0.06);
+  border-radius:14px; border:1px dashed #ff770066;
+}
+
+.customize-actions {
+  display:flex; gap:0.7rem; flex-wrap:wrap;
+  justify-content:center; margin-top:1.5rem;
+}
+.customize-actions button {
+  font-family:'Orbitron', sans-serif; font-weight:700;
+  font-size:0.8rem; letter-spacing:0.1em;
+  padding:0.8rem 1.6rem; border-radius:50px; cursor:pointer;
+  transition:all 0.25s; border:2px solid;
+}
+.btn-generate {
+  background:linear-gradient(180deg, #ff8800, #cc0000);
+  border-color:#ffcc00; color:#fff;
+  text-shadow:0 2px 0 #7a0000;
+  box-shadow:0 0 25px #ff6600;
+}
+.btn-generate:hover { transform:translateY(-3px) scale(1.03); box-shadow:0 0 45px #ffaa00; }
+.btn-reset { background:transparent; border-color:#666; color:#aaa; }
+.btn-reset:hover { border-color:#ff7700; color:#ff7700; }
+.btn-close-panel { background:transparent; border-color:#00c8ff; color:#00e0ff; }
+.btn-close-panel:hover { box-shadow:0 0 25px #00c8ff; }
+
+.link-result {
+  margin-top:1.2rem; padding:1rem;
+  background:rgba(0,200,255,0.08); border:2px solid #00c8ff;
+  border-radius:14px; display:none;
+}
+.link-result.show { display:block; animation:subtitlePop 0.5s ease-out; }
+.link-result .label {
+  font-family:'Orbitron', sans-serif; font-size:0.7rem;
+  letter-spacing:0.15em; color:#00e0ff; text-transform:uppercase;
+  margin-bottom:0.5rem; text-shadow:0 0 10px #00c8ff;
+}
+.link-result .url-box {
+  width:100%; padding:0.7rem;
+  background:rgba(0,0,0,0.7); color:#fff;
+  border:2px solid #00c8ff; border-radius:10px;
+  font-family:monospace; font-size:0.72rem;
+  word-break:break-all; line-height:1.4; max-height:100px;
+  overflow-y:auto;
+}
+.link-result .copy-row {
+  display:flex; gap:0.5rem; margin-top:0.7rem; flex-wrap:wrap;
+}
+.link-result .copy-row button {
+  flex:1; min-width:120px; padding:0.7rem 1rem;
+  font-family:'Orbitron', sans-serif; font-weight:700;
+  font-size:0.75rem; letter-spacing:0.1em;
+  border-radius:50px; cursor:pointer; border:2px solid;
+  transition:all 0.25s;
+}
+.copy-link-btn {
+  background:linear-gradient(180deg, #00c8ff, #0066cc);
+  border-color:#00e0ff; color:#fff;
+}
+.copy-link-btn:hover { box-shadow:0 0 30px #00c8ff; transform:translateY(-2px); }
+.share-wa-btn {
+  background:linear-gradient(180deg, #25d366, #128c7e);
+  border-color:#25d366; color:#fff;
+}
+.share-wa-btn:hover { box-shadow:0 0 30px #25d366; transform:translateY(-2px); }
+
+.banner-custom {
+  position:fixed; top:0; left:0; right:0; z-index:70;
+  background:linear-gradient(90deg, #ff7700, #ffcc00, #ff7700);
+  color:#000; text-align:center; padding:0.4rem;
+  font-family:'Orbitron', sans-serif; font-weight:900;
+  font-size:0.7rem; letter-spacing:0.2em; text-transform:uppercase;
+  box-shadow:0 2px 20px #ff7700;
+  animation:flameFlicker 1s infinite alternate;
+}
+.banner-custom.hidden { display:none; }
+
+@media (max-width: 480px) {
+  .customize-fab { width:48px; height:48px; font-size:1.2rem; bottom:16px; left:16px; }
+  .music-fab { width:48px; height:48px; font-size:1.2rem; bottom:16px; right:16px; }
+  .music-volume-slider { bottom:74px; right:16px; width:48px; height:160px; }
+  .music-volume-slider input[type="range"] { width:120px; margin:50px 0; }
+  .customize-actions button { padding:0.7rem 1.1rem; font-size:0.7rem; }
 }
 </style>
 </head>
@@ -128,84 +530,149 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
 <div class="speed-lines-bg" id="speedLinesBg"></div>
 
 <div id="loader">
-  <div class="loader-logo-space" id="logoSpace">
-    <img src="logo.png" alt="Hot Wheels" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-  </div>
-  <div class="spinner"></div>
-  <p>CARGANDO MODELOS ...</p>
-  <div class="progress-bar-wrap"><div class="progress-bar" id="loadProgress"></div></div>
-  <div class="progress-text" id="loadText">0%</div>
+<div class="loader-logo-space" id="logoSpace">
+<img src="logo.png" alt="Hot Wheels" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+<span class="placeholder-text" style="display:none;">[ ESPACIO PARA<br>LOGO HOT WHEELS ]</span>
+</div>
+<div class="spinner"></div>
+<p>CARGANDO MODELOS 3D...</p>
+<div class="progress-bar-wrap"><div class="progress-bar" id="loadProgress"></div></div>
+<div class="progress-text" id="loadText">0%</div>
 </div>
 
 <div id="phase1" class="phase">
-  <img src="logo.png" alt="" class="hw-logo corner-tl" onerror="this.style.display='none'">
-  <img src="logo.png" alt="" class="hw-logo corner-tr" onerror="this.style.display='none'">
-  <img src="logo.png" alt="" class="hw-logo corner-bl" onerror="this.style.display='none'">
-  <img src="logo.png" alt="" class="hw-logo corner-br" onerror="this.style.display='none'">
-  <img src="logo.png" alt="Hot Wheels" class="hw-logo big-center" onerror="this.style.display='none'">
-  <h1 class="hw-title">
-    SPEED OF LOVE
-    <span class="accent">HOT WHEELS</span>
-  </h1>
-  <div class="hw-flames">🔥🏎️💨🔥</div>
-  <div class="hw-subtitle">Presiona para arrancar juntos este viaje</div>
-  <button id="startBtn" class="start-btn">Acelerar 🔥</button>
+<img src="logo.png" alt="" class="hw-logo corner-tl" onerror="this.style.display='none'">
+<img src="logo.png" alt="" class="hw-logo corner-tr" onerror="this.style.display='none'">
+<img src="logo.png" alt="" class="hw-logo corner-bl" onerror="this.style.display='none'">
+<img src="logo.png" alt="" class="hw-logo corner-br" onerror="this.style.display='none'">
+<img src="logo.png" alt="Hot Wheels" class="hw-logo big-center" onerror="this.style.display='none'">
+<h1 class="hw-title">
+SPEED OF LOVE
+<span class="accent">HOT WHEELS</span>
+</h1>
+<div class="hw-flames">🔥🏎️💨🔥</div>
+<div class="hw-subtitle">Presiona para arrancar juntos este viaje</div>
+<button id="startBtn" class="start-btn">Acelerar 🔥</button>
 </div>
 
 <div id="phase2" class="phase hidden">
-  <img src="logo.png" alt="" class="hw-logo corner-tl" onerror="this.style.display='none'">
-  <img src="logo.png" alt="" class="hw-logo corner-tr" onerror="this.style.display='none'">
-  <h2 class="garage-title">HOT WHEELS</h2>
-  <div class="garage-sub">Arrastra para explorar · Toca un carrito 💌</div>
+<img src="logo.png" alt="" class="hw-logo corner-tl" onerror="this.style.display='none'">
+<img src="logo.png" alt="" class="hw-logo corner-tr" onerror="this.style.display='none'">
+<h2 class="garage-title">HOT WHEELS</h2>
+<div class="garage-sub">Arrastra para explorar · Toca un carrito 💌</div>
 </div>
 
 <div id="phase3" class="phase hidden">
-  <img src="logo.png" alt="" class="hw-logo corner-tl" style="width:clamp(50px,6vw,90px); opacity:0.8;" onerror="this.style.display='none'">
-  <img src="logo.png" alt="" class="hw-logo corner-tr" style="width:clamp(50px,6vw,90px); opacity:0.8;" onerror="this.style.display='none'">
-  <div class="hud-top">
-    <div class="hud-lap" id="hudLap">🔥 CARRERA EN VIVO</div>
-    <div class="hud-speed" id="hudSpeed">0 KM/H</div>
-  </div>
-  <div class="race-subtitle-wrap">
-    <div id="raceSubtitle" class="race-subtitle"></div>
-  </div>
-  <div class="race-progress-wrap">
-    <div id="raceProgress" class="race-progress"></div>
-  </div>
+<img src="logo.png" alt="" class="hw-logo corner-tl" style="width:clamp(50px,6vw,90px); opacity:0.8;" onerror="this.style.display='none'">
+<img src="logo.png" alt="" class="hw-logo corner-tr" style="width:clamp(50px,6vw,90px); opacity:0.8;" onerror="this.style.display='none'">
+<div class="hud-top">
+<div class="hud-lap" id="hudLap">🔥 CARRERA EN VIVO</div>
+<div class="hud-speed" id="hudSpeed">0 KM/H</div>
+</div>
+<div class="race-subtitle-wrap">
+<div id="raceSubtitle" class="race-subtitle"></div>
+</div>
+<div class="race-progress-wrap">
+<div id="raceProgress" class="race-progress"></div>
+</div>
 </div>
 
 <div id="phase4" class="phase hidden">
-  <img src="logo.png" alt="" class="hw-logo corner-tl" onerror="this.style.display='none'">
-  <img src="logo.png" alt="" class="hw-logo corner-tr" onerror="this.style.display='none'">
-  <div class="letter-layout">
-    <div id="letterCard" class="letter-card">
-      <h2 id="letterTitle">Para ti</h2>
-      <p id="letterBody">...</p>
-      <div class="letter-buttons">
-        <button id="repeatBtn" class="repeat-btn">¡A correr!</button>
-        <button id="garageBtn" class="garage-btn">Elegir otro auto</button>
-      </div>
-    </div>
-    <div class="model-viewer" id="modelViewer">
-      <div class="viewer-label">HOT WHEELS</div>
-    </div>
-  </div>
+<img src="logo.png" alt="" class="hw-logo corner-tl" onerror="this.style.display='none'">
+<img src="logo.png" alt="" class="hw-logo corner-tr" onerror="this.style.display='none'">
+<div class="letter-layout">
+<div id="letterCard" class="letter-card">
+<h2 id="letterTitle">Para ti</h2>
+<p id="letterBody">...</p>
+<div class="letter-buttons">
+<button id="repeatBtn" class="repeat-btn"> ¡A CORRER! </button>
+<button id="garageBtn" class="garage-btn"> Elegir otro auto</button>
+</div>
+</div>
+<div class="model-viewer" id="modelViewer">
+<div class="viewer-label"> HOT WHEELS</div>
+</div>
+</div>
 </div>
 
 <button id="skipBtn" class="skip-btn">Saltar carrera ⏭</button>
 
 <!-- 🎵 MÚSICA DE FONDO -->
-<audio id="bgMusic" loop preload="auto">
-  <source src="musica.mp3" type="audio/mpeg">
-</audio>
-<button id="muteBtn" class="mute-btn" title="Silenciar música">🔊</button>
+<audio id="bgMusic" src="musica.mp3" loop preload="auto"></audio>
+
+<!-- ⚙️ BOTÓN FLOTANTE DE PERSONALIZACIÓN -->
+<button id="customizeFab" class="customize-fab hidden" title="Personalizar">⚙️</button>
+
+<!-- 🎵 BOTÓN FLOTANTE DE MÚSICA -->
+<button id="musicFab" class="music-fab" title="Música">🔊</button>
+
+<!-- 🎚️ SLIDER DE VOLUMEN -->
+<div id="musicVolumeSlider" class="music-volume-slider">
+  <span class="vol-label">VOL</span>
+  <input type="range" id="musicVolumeRange" min="0" max="100" value="60">
+  <span class="vol-label" id="volValue">60</span>
+</div>
+
+<!-- 📢 BANNER CUANDO SE ABRE UN LINK PERSONALIZADO -->
+<div id="customBanner" class="banner-custom hidden">
+💝 Mensaje personalizado · Solo para ti
+</div>
+
+<!-- 🎛️ MODAL DE PERSONALIZACIÓN -->
+<div id="customizeModal" class="customize-modal">
+<div class="customize-panel">
+<h2>PERSONALIZA TU MENSAJE</h2>
+<div class="sub">Crea un link único para tu persona favorita</div>
+
+<div class="customize-field">
+<label>🚗 Elige el carrito</label>
+<select id="customCarSelect"></select>
+</div>
+
+<div class="customize-field">
+<label>💌 Título de la carta</label>
+<input type="text" id="customTitle" maxlength="120" placeholder="Ej: Para ti, mi amor...">
+<div class="hint">Máximo 120 caracteres</div>
+</div>
+
+<div class="customize-field">
+<label>📝 Cuerpo del mensaje</label>
+<textarea id="customBody" maxlength="1200" placeholder="Escribe aquí tu mensaje especial..."></textarea>
+<div class="hint"><span id="bodyCount">0</span>/1200 caracteres</div>
+</div>
+
+<div class="customize-field">
+<label>✨ Frases de la carrera (opcional)</label>
+<div class="phrase-editor-group" id="phraseEditorGroup"></div>
+<div class="hint">Estas frases aparecen durante la carrera. Déjalas vacías para usar las originales.</div>
+</div>
+
+<div class="customize-actions">
+<button class="btn-generate" id="generateLinkBtn">🔗 Generar link</button>
+<button class="btn-reset" id="resetCustomBtn">↺ Restaurar</button>
+<button class="btn-close-panel" id="closeCustomBtn">✕ Cerrar</button>
+</div>
+
+<div class="link-result" id="linkResult">
+<div class="label">✅ Tu link personalizado está listo</div>
+<div class="url-box" id="linkUrlBox"></div>
+<div class="copy-row">
+<button class="copy-link-btn" id="copyLinkBtn">📋 Copiar link</button>
+<button class="share-wa-btn" id="shareWaBtn">💬 WhatsApp</button>
+</div>
+<div class="hint" style="margin-top:0.6rem; color:#ffcc00;">
+Este link NO modifica la web original. Cada persona puede crear el suyo.
+</div>
+</div>
+</div>
+</div>
 
 <script type="importmap">
 {
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
+"imports": {
+"three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+"three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+}
 }
 </script>
 
@@ -221,7 +688,9 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 // ========================================================
 // GLOBALES
 // ========================================================
+
 const TRACK_LENGTH = 400;
+
 let activeCar = null;
 let activeCarType = 'angels';
 let activeCarData = null;
@@ -235,13 +704,17 @@ let phraseShown = [];
 let phraseTimer = 0;
 let phraseActive = false;
 const PHRASE_DURATION = 4.5;
+
 let viewerRenderer = null, viewerScene = null, viewerCamera = null, viewerModel = null, viewerAnimId = null;
+
 const raycaster = new THREE.Raycaster();
 const mouseNDC = new THREE.Vector2();
 let pointerDownPos = null;
+
 const modelCache = {};
 let loadedCount = 0;
 let totalToLoad = 0;
+
 let phase1, phase2, phase3, phase4;
 let startBtn, raceSubtitle, raceProgress, hudSpeed, hudLap;
 let letterTitle, letterBody, letterCard, repeatBtn, garageBtn;
@@ -250,198 +723,225 @@ let modelViewerEl;
 let loaderEl, loadProgressEl, loadTextEl;
 let sceneContainerEl, warpOverlay, warpRays;
 
-// 🎵 MÚSICA
-let bgMusic, muteBtn;
+// Personalización
+let customizeFab, customizeModal, customCarSelect, customTitle, customBody;
+let phraseEditorGroup, generateLinkBtn, resetCustomBtn, closeCustomBtn;
+let linkResult, linkUrlBox, copyLinkBtn, shareWaBtn, customBanner, bodyCount;
+let currentEditingCarId = null;
+
+// Música
+let bgMusic = null;
+let musicFab = null;
+let musicVolumeSlider = null;
+let musicVolumeRange = null;
+let volValue = null;
 let musicStarted = false;
-let musicMuted = false;
-const MUSIC_BASE_VOLUME = 0.35;
-let currentMusicVolume = 0;
 
 // ========================================================
 // CARS
 // ========================================================
+
 const CARS = [
-  { id: 'raptor', file: 'raptor.glb', name: 'FORD F-150 RAPTOR',
-    color: 0xffffff, rotationY: Math.PI, image: 'raptor.png',
-    phrases: ["Contigo no existen caminos difíciles ni baches que nos puedan frenar. 🏔️","Este motor ruge fuerte, pero mi corazón late más rápido cuando te subes.","Me encanta cómo se siente el viaje cuando tú eres quien maneja mi vida.","Eres la única persona capaz de hacerme sentir a salvo en cualquier terreno.","Aunque tengamos tracción en las cuatro ruedas, tú eres mi único agarre seguro.","Contigo iría hasta el fin del mundo, sin importar si hay carretera o no. ✨","Llegamos a la meta, pero este viaje todoterreno a tu lado apenas empieza. 🖤"],
-    letterTitle: "Raptor · Un amor que lo supera todo",
-    letterBody: "Escribo esto pensando en la fuerza y la seguridad que me transmites cada día. Eres como una Raptor: imponente por fuera, pero el lugar más cómodo y seguro para mí por dentro. Me encanta que no le tengas miedo a los caminos difíciles, que conviertas cualquier obstáculo en una aventura y que siempre encuentres la manera de hacerme sonreír en las curvas de la vida. Gracias por ser mi compañero de ruta, mi protector y mi aventura favorita a cuatro ruedas. Te quiero más de lo que cualquier motor de alta potencia podría llegar a demostrar en toda una vida. 🖤" },
-  { id: 'kitt', file: 'kitt.glb', name: 'K.I.T.T. (Pontiac Firebird)',
-    color: 0xff2222, rotationY: Math.PI, image: 'kitt.png',
-    phrases: ["Mi escáner frontal parpadea en rojo cada vez que te acercas... es mi forma de latir. ❤️‍🔥","No necesito activar el modo de conducción autónoma si el destino siempre eres tú.","Aceleremos a fondo con el Turbo Boost, mi corazón va a mil por hora contigo.","Eres la única persona capaz de tomar el control de mis sistemas sin hackearme.","Incluso la computadora más avanzada del mundo se queda sin palabras al mirarte.","Viajar en el tiempo o recorrer carreteras vacías... da igual el rumbo si es a tu lado. ✨","Llegamos al final de la ruta, pero nuestro viaje apenas está comenzando. 🖤"],
-    letterTitle: "K.I.T.T. · Un amor con inteligencia artificial",
-    letterBody: "Escribo esto procesando cada milisegundo que pasamos juntos, guardando cada sonrisa tuya en mi banco de memoria central. Llegaste a mi vida para demostrarme que, detrás de toda mi carrocería blindada y mis sistemas avanzados, hay un motor que ruge con fuerza solo por ti. Contigo aprendí que el viaje más emocionante no se mide en caballos de fuerza ni en velocidad máxima, sino en la tranquilidad de ir en el asiento de al lado compartiendo el mismo camino. Te quiero más de lo que cualquier software o velocímetro podría llegar a calcular en toda una eternidad. 🖤" },
-  { id: 'jackhammer', file: 'jackhammer.glb', name: 'JACK HAMMER',
-    color: 0xd0d8e0, rotationY: Math.PI, image: 'jackhammer.png',
-    phrases: ["Oye... cuando te vi llegar con este coche, sentí que algo bonito empezaba ✨","Eres mi ángel de la guarda con ruedas, ¿lo sabías?","Cada vez que aceleras, mi corazón hace lo mismo pero más rápido.","Me encanta cómo me miras cuando crees que no me doy cuenta.","Contigo hasta el silencio se siente como música de fondo.","Si pudiera pedir un deseo, sería más tardes así, contigo.","Llegamos a la meta, pero mi amor por ti no se detiene nunca. 🤍"],
-    letterTitle: "Jack Hammer · Un amor celestial",
-    letterBody: "Escribo esto mientras pienso en todas las veces que me has hecho sonreír sin darte cuenta. Eres esa persona que llegó a mi vida como un ángel con ruedas, sin avisar y sin hacer ruido. Contigo aprendí que el amor más bonito es el que se siente tranquilo, seguro, como un motor que ronronea suave. Gracias por cada mirada, por cada silencio cómodo, por cada carcajada a 200 por hora. Te quiero más de lo que este velocímetro puede marcar. 🤍" },
-  { id: 'chevrolet', file: 'chevrolet.glb', name: 'CHEVROLET',
-    color: 0x2266dd, rotationY: Math.PI, image: 'chevrolet.png',
-    phrases: ["Oye, ese azul te hace ver tan guapo que hasta yo me distraigo 🏎️","Me encanta cuando pisas el acelerador y se te escapa una sonrisa.","Contigo hasta los atascos son una cita perfecta.","Eres mi muscle car favorito: fuerte por fuera, tierno por dentro.","Cada rugido del motor me recuerda lo mucho que me gustas.","Si la vida fuera una carrera, yo te elegiría como copiloto siempre.","Ganamos juntos, pero mi premio real eres tú. 💙"],
-    letterTitle: "Chevrolet · Fuerza que enamora",
-    letterBody: "Desde el primer día supe que contigo sería diferente. Eres fuerte como un muscle car, pero tienes un corazón tierno que me derrite. Me encanta cómo ruge ese motor cuando aceleras, cómo te brillan los ojos cuando presumes tus derrapes y cómo te ríes cuando me asusto en las curvas. Eres mi compañero de mil aventuras, mi persona favorita, mi amor a toda velocidad. Gracias por cada kilómetro juntos y por los que nos faltan. Te quiero. 💙" },
-  { id: 'gladiator', file: 'gladiator.glb', name: 'GLADIATOR',
-    color: 0xeaeaea, rotationY: Math.PI, image: 'gladiator.png',
-    phrases: ["Ese blanco te hace ver tan rudo que hasta me dan ganas de subirme 🚙","Eres mi gladiador favorito, el que siempre pelea por nosotros.","Con este coche hasta el barro se ve bonito, ¿cómo le haces?","Me encanta que no le tengas miedo a los caminos difíciles.","Contigo hasta perdernos es la mejor parte del viaje.","Eres mi compañero de aventuras y mi persona segura.","Llegamos a la meta, pero nuestra aventura sigue. 🤍"],
-    letterTitle: "Gladiator · Mi guerrero favorito",
-    letterBody: "Escribo esto pensando en todas las veces que has sido mi guerrero, mi protector, mi persona segura. Me encanta que no le tengas miedo a los caminos difíciles, que conviertas las piedras en rampas y que siempre encuentres la manera de hacerme sonreír. Eres mi gladiador favorito, el que pelea por nosotros incluso cuando no se lo pedimos. Gracias por cada aventura, por cada risa, por cada momento en el que me haces sentir la mujer más afortunada. Te quiero. 🤍" },
-  { id: 'hyperconcept', file: 'hyperconcept.glb', name: 'HYPERCONCEPT',
-    color: 0x00e0ff, rotationY: Math.PI, image: 'hyperconcept.png',
-    phrases: ["Contigo el futuro se ve brillante... literal, como este coche ✨","Me haces volar más allá de lo que había planeado para mi vida.","Eres mi destino favorito en cualquier galaxia, ¿lo sabías?","Si el amor tuviera turbo, sería exactamente esto que siento.","Aceleras mi corazón a mil por hora y no quiero frenar nunca.","Eres mi ciencia ficción favorita hecha realidad. Te adoro.","Llegamos a la meta, pero quiero seguir viajando contigo. 🤍"],
-    letterTitle: "Hyperconcept · Amor a mil por hora",
-    letterBody: "Contigo el amor es de ciencia ficción: acelera mi corazón a mil por hora y no quiero frenar jamás. Eres el destino más hermoso que el universo me pudo dar. Cada vez que te veo, siento que el futuro se vuelve brillante y lleno de posibilidades. Eres mi persona favorita en cualquier galaxia, mi copiloto interestelar. Te amo más allá de lo conocido. 🤍" },
-  { id: 'angels', file: 'angels.glb', name: 'ANGELS',
-    color: 0xe02222, rotationY: Math.PI, image: 'angels.png',
-    phrases: ["Ese rojo es peligroso... como lo que siento cuando me miras 🔥","Contigo todo arde más bonito, incluso los enojos.","Eres mi chispa, mi fuego, mi persona favorita.","Me encanta cuando aceleras y se te escapa esa sonrisa pícara.","Si el amor quemara, yo ya estaría en llamas por ti.","Contigo hasta el asfalto se derrite. Eres demasiado para mí.","Llegamos, pero mi corazón sigue a toda velocidad por ti. ❤️"],
-    letterTitle: "Angels · Pasión ardiente",
-    letterBody: "Escribo esto con el corazón encendido porque tú me haces sentir cosas que no sabía que podía sentir. Eres mi chispa, mi fuego, mi persona favorita para hacer locuras. Me encanta cómo presumes ese motor, cómo te ríes cuando me asusto y cómo me haces sentir viva. Contigo hasta el asfalto se derrite. Gracias por cada momento, por cada caricia, por cada beso robado. Te amo con toda mi alma. ❤️" },
-  { id: 'r8', file: 'r8.glb', name: 'R8',
-    color: 0xb8c4cc, rotationY: Math.PI, image: 'r8.png',
-    phrases: ["Ese plateado te hace ver como sacado de una película 🎬","Eres mi protagonista favorito, mi estrella, mi todo.","Me encanta cómo me miras cuando crees que estoy distraída.","Contigo hasta el silencio se siente elegante.","Si el amor tuviera clase, sería exactamente este momento.","Eres mi persona favorita, mi lujo más bonito.","Llegamos, pero yo quiero seguir siendo tu copiloto siempre. 🩶"],
-    letterTitle: "R8 · Elegancia pura",
-    letterBody: "Dicen que la elegancia no se compra, se lleva. Y tú la llevas con una naturalidad que me enamora cada día. Eres mi protagonista favorito, mi estrella de cine, mi todo. Me encanta cómo me tratas, cómo me cuidas, cómo me haces sentir la mujer más especial del mundo. Contigo hasta el silencio se siente elegante. Gracias por cada detalle, por cada gesto, por cada momento. Te amo. 🩶" }
+{ id: 'raptor', file: 'raptor.glb', name: 'FORD F-150 RAPTOR',
+color: 0xffffff, rotationY: Math.PI, image: 'raptor.png',
+phrases: ["Contigo no existen caminos difíciles ni baches que nos puedan frenar. 🏔️","Este motor ruge fuerte, pero mi corazón late más rápido cuando te subes.","Me encanta cómo se siente el viaje cuando tú eres quien maneja mi vida.","Eres la única persona capaz de hacerme sentir a salvo en cualquier terreno.","Aunque tengamos tracción en las cuatro ruedas, tú eres mi único agarre seguro.","Contigo iría hasta el fin del mundo, sin importar si hay carretera o no. ✨","Llegamos a la meta, pero este viaje todoterreno a tu lado apenas empieza. 🖤"],
+letterTitle: "Raptor · Un amor que lo supera todo",
+letterBody: "Escribo esto pensando en la fuerza y la seguridad que me transmites cada día. Eres como una Raptor: imponente por fuera, pero el lugar más cómodo y seguro para mí por dentro. Me encanta que no le tengas miedo a los caminos difíciles, que conviertas cualquier obstáculo en una aventura y que siempre encuentres la manera de hacerme sonreír en las curvas de la vida. Gracias por ser mi compañero de ruta, mi protector y mi aventura favorita a cuatro ruedas. Te quiero más de lo que cualquier motor de alta potencia podría llegar a demostrar en toda una vida. 🖤" },
+
+{ id: 'kitt', file: 'kitt.glb', name: 'K.I.T.T. (Pontiac Firebird)',
+color: 0xff2222, rotationY: Math.PI, image: 'kitt.png',
+phrases: ["Mi escáner frontal parpadea en rojo cada vez que te acercas... es mi forma de latir. ❤️‍🔥","No necesito activar el modo de conducción autónoma si el destino siempre eres tú.","Aceleremos a fondo con el Turbo Boost, mi corazón va a mil por hora contigo.","Eres la única persona capaz de tomar el control de mis sistemas sin hackearme.","Incluso la computadora más avanzada del mundo se queda sin palabras al mirarte.","Viajar en el tiempo o recorrer carreteras vacías... da igual el rumbo si es a tu lado. ✨","Llegamos al final de la ruta, pero nuestro viaje apenas está comenzando. 🖤"],
+letterTitle: "K.I.T.T. · Un amor con inteligencia artificial",
+letterBody: "Escribo esto procesando cada milisegundo que pasamos juntos, guardando cada sonrisa tuya en mi banco de memoria central. Llegaste a mi vida para demostrarme que, detrás de toda mi carrocería blindada y mis sistemas avanzados, hay un motor que ruge con fuerza solo por ti. Contigo aprendí que el viaje más emocionante no se mide en caballos de fuerza ni en velocidad máxima, sino en la tranquilidad de ir en el asiento de al lado compartiendo el mismo camino. Te quiero más de lo que cualquier software o velocímetro podría llegar a calcular en toda una eternidad. 🖤" },
+
+{ id: 'jackhammer', file: 'jackhammer.glb', name: 'JACK HAMMER',
+color: 0xd0d8e0, rotationY: Math.PI, image: 'jackhammer.png',
+phrases: ["Oye... cuando te vi llegar con este coche, sentí que algo bonito empezaba ✨","Eres mi ángel de la guarda con ruedas, ¿lo sabías?","Cada vez que aceleras, mi corazón hace lo mismo pero más rápido.","Me encanta cómo me miras cuando crees que no me doy cuenta.","Contigo hasta el silencio se siente como música de fondo.","Si pudiera pedir un deseo, sería más tardes así, contigo.","Llegamos a la meta, pero mi amor por ti no se detiene nunca. 🤍"],
+letterTitle: "Jack Hammer · Un amor celestial",
+letterBody: "Escribo esto mientras pienso en todas las veces que me has hecho sonreír sin darte cuenta. Eres esa persona que llegó a mi vida como un ángel con ruedas, sin avisar y sin hacer ruido. Contigo aprendí que el amor más bonito es el que se siente tranquilo, seguro, como un motor que ronronea suave. Gracias por cada mirada, por cada silencio cómodo, por cada carcajada a 200 por hora. Te quiero más de lo que este velocímetro puede marcar. 🤍" },
+
+{ id: 'chevrolet', file: 'chevrolet.glb', name: 'CHEVROLET',
+color: 0x2266dd, rotationY: Math.PI, image: 'chevrolet.png',
+phrases: ["Oye, ese azul te hace ver tan guapo que hasta yo me distraigo 🏎️","Me encanta cuando pisas el acelerador y se te escapa una sonrisa.","Contigo hasta los atascos son una cita perfecta.","Eres mi muscle car favorito: fuerte por fuera, tierno por dentro.","Cada rugido del motor me recuerda lo mucho que me gustas.","Si la vida fuera una carrera, yo te elegiría como copiloto siempre.","Ganamos juntos, pero mi premio real eres tú. 💙"],
+letterTitle: "Chevrolet · Fuerza que enamora",
+letterBody: "Desde el primer día supe que contigo sería diferente. Eres fuerte como un muscle car, pero tienes un corazón tierno que me derrite. Me encanta cómo ruge ese motor cuando aceleras, cómo te brillan los ojos cuando presumes tus derrapes y cómo te ríes cuando me asusto en las curvas. Eres mi compañero de mil aventuras, mi persona favorita, mi amor a toda velocidad. Gracias por cada kilómetro juntos y por los que nos faltan. Te quiero. 💙" },
+
+{ id: 'gladiator', file: 'gladiator.glb', name: 'GLADIATOR',
+color: 0xeaeaea, rotationY: Math.PI, image: 'gladiator.png',
+phrases: ["Ese blanco te hace ver tan rudo que hasta me dan ganas de subirme 🚙","Eres mi gladiador favorito, el que siempre pelea por nosotros.","Con este coche hasta el barro se ve bonito, ¿cómo le haces?","Me encanta que no le tengas miedo a los caminos difíciles.","Contigo hasta perdernos es la mejor parte del viaje.","Eres mi compañero de aventuras y mi persona segura.","Llegamos a la meta, pero nuestra aventura sigue. 🤍"],
+letterTitle: "Gladiator · Mi guerrero favorito",
+letterBody: "Escribo esto pensando en todas las veces que has sido mi guerrero, mi protector, mi persona segura. Me encanta que no le tengas miedo a los caminos difíciles, que conviertas las piedras en rampas y que siempre encuentres la manera de hacerme sonreír. Eres mi gladiador favorito, el que pelea por nosotros incluso cuando no se lo pedimos. Gracias por cada aventura, por cada risa, por cada momento en el que me haces sentir la mujer más afortunada. Te quiero. 🤍" },
+
+{ id: 'hyperconcept', file: 'hyperconcept.glb', name: 'HYPERCONCEPT',
+color: 0x00e0ff, rotationY: Math.PI, image: 'hyperconcept.png',
+phrases: ["Contigo el futuro se ve brillante... literal, como este coche ✨","Me haces volar más allá de lo que había planeado para mi vida.","Eres mi destino favorito en cualquier galaxia, ¿lo sabías?","Si el amor tuviera turbo, sería exactamente esto que siento.","Aceleras mi corazón a mil por hora y no quiero frenar nunca.","Eres mi ciencia ficción favorita hecha realidad. Te adoro.","Llegamos a la meta, pero quiero seguir viajando contigo. 🤍"],
+letterTitle: "Hyperconcept · Amor a mil por hora",
+letterBody: "Contigo el amor es de ciencia ficción: acelera mi corazón a mil por hora y no quiero frenar jamás. Eres el destino más hermoso que el universo me pudo dar. Cada vez que te veo, siento que el futuro se vuelve brillante y lleno de posibilidades. Eres mi persona favorita en cualquier galaxia, mi copiloto interestelar. Te amo más allá de lo conocido. 🤍" },
+
+{ id: 'angels', file: 'angels.glb', name: 'ANGELS',
+color: 0xe02222, rotationY: Math.PI, image: 'angels.png',
+phrases: ["Ese rojo es peligroso... como lo que siento cuando me miras 🔥","Contigo todo arde más bonito, incluso los enojos.","Eres mi chispa, mi fuego, mi persona favorita.","Me encanta cuando aceleras y se te escapa esa sonrisa pícara.","Si el amor quemara, yo ya estaría en llamas por ti.","Contigo hasta el asfalto se derrite. Eres demasiado para mí.","Llegamos, pero mi corazón sigue a toda velocidad por ti. ❤️"],
+letterTitle: "Angels · Pasión ardiente",
+letterBody: "Escribo esto con el corazón encendido porque tú me haces sentir cosas que no sabía que podía sentir. Eres mi chispa, mi fuego, mi persona favorita para hacer locuras. Me encanta cómo presumes ese motor, cómo te ríes cuando me asusto y cómo me haces sentir viva. Contigo hasta el asfalto se derrite. Gracias por cada momento, por cada caricia, por cada beso robado. Te amo con toda mi alma. ❤️" },
+
+{ id: 'r8', file: 'r8.glb', name: 'R8',
+color: 0xb8c4cc, rotationY: Math.PI, image: 'r8.png',
+phrases: ["Ese plateado te hace ver como sacado de una película 🎬","Eres mi protagonista favorito, mi estrella, mi todo.","Me encanta cómo me miras cuando crees que estoy distraída.","Contigo hasta el silencio se siente elegante.","Si el amor tuviera clase, sería exactamente este momento.","Eres mi persona favorita, mi lujo más bonito.","Llegamos, pero yo quiero seguir siendo tu copiloto siempre. 🩶"],
+letterTitle: "R8 · Elegancia pura",
+letterBody: "Dicen que la elegancia no se compra, se lleva. Y tú la llevas con una naturalidad que me enamora cada día. Eres mi protagonista favorito, mi estrella de cine, mi todo. Me encanta cómo me tratas, cómo me cuidas, cómo me haces sentir la mujer más especial del mundo. Contigo hasta el silencio se siente elegante. Gracias por cada detalle, por cada gesto, por cada momento. Te amo. 🩶" }
 ];
 
 const SPEED_EMOJIS = ['🏎️','💨','⚡','🔥','🏁','💫','🚀','⭐','✨','🌠','🏆','🎯','💥','🌟','🛞','🛣️','🎸','🍀','❤️','💙','🖤','🤍','🧡','💛','💚','💜','🔮','👑','🌪️','⚙️'];
+
 const SPACE_PHRASES = [
-  "💨 A toda velocidad por ti","⚡ Rayos de amor","🏁 Cada curva es tuya","🔥 Pasión a 300 km/h",
-  "✨ Tú eres mi meta","💫 Derrapando en tu corazón","🏎️ Acelera mi vida","🌟 Sin frenos por ti",
-  "💥 Explosión de amor","🎯 Directo a tu corazón","🚀 Más rápido que el destino","⚡ Chispa eterna",
-  "❤️ Motor de pasión","🌈 Neon en tus ojos","🔊 Ruge mi corazón","🌀 Derrape hacia ti",
-  "🌠 Estrella fugaz de amor","⚙️ Engranaje perfecto","🛞 Rodando juntos","🏆 Trofeo de mi vida",
-  "🔥 Llamas de velocidad","💎 Brillo eterno","🌌 Galaxia de besos","⚡ Voltaje de amor",
-  "🏁 Meta: tu corazón","🎸 Rock a toda velocidad","🚦 Luz verde al amor","💫 Órbita de pasión",
-  "🔮 Destino acelerado","👑 Rey de mi pista","🌪️ Torbellino de amor","💥 Impacto a 400 km/h",
-  "⚡ Relámpago eterno","🏎️ Fórmula de amor","🎯 Tiro al corazón","🌟 Supernova de amor",
-  "🚀 Cohete a tu lado","💨 Viento en la cara","🔥 Combustible del alma","✨ Destello infinito",
-  "🌀 Vórtice de amor","🛣️ Ruta sin final","⚡ Pulso a mil","🎨 Pintado de pasión",
-  "💫 Giro eterno","🏁 Línea de meta: tú","🔥 Fuego en el motor","💨 Aire de libertad"
+"💨 A toda velocidad por ti","⚡ Rayos de amor","🏁 Cada curva es tuya","🔥 Pasión a 300 km/h",
+"✨ Tú eres mi meta","💫 Derrapando en tu corazón","🏎️ Acelera mi vida","🌟 Sin frenos por ti",
+"💥 Explosión de amor","🎯 Directo a tu corazón","🚀 Más rápido que el destino","⚡ Chispa eterna",
+"❤️ Motor de pasión","🌈 Neon en tus ojos","🔊 Ruge mi corazón","🌀 Derrape hacia ti",
+"🌠 Estrella fugaz de amor","⚙️ Engranaje perfecto","🛞 Rodando juntos","🏆 Trofeo de mi vida",
+"🔥 Llamas de velocidad","💎 Brillo eterno","🌌 Galaxia de besos","⚡ Voltaje de amor",
+"🏁 Meta: tu corazón","🎸 Rock a toda velocidad","🚦 Luz verde al amor","💫 Órbita de pasión",
+"🔮 Destino acelerado","👑 Rey de mi pista","🌪️ Torbellino de amor","💥 Impacto a 400 km/h",
+"⚡ Relámpago eterno","🏎️ Fórmula de amor","🎯 Tiro al corazón","🌟 Supernova de amor",
+"🚀 Cohete a tu lado","💨 Viento en la cara","🔥 Combustible del alma","✨ Destello infinito",
+"🌀 Vórtice de amor","🛣️ Ruta sin final","⚡ Pulso a mil","🎨 Pintado de pasión",
+"💫 Giro eterno","🏁 Línea de meta: tú","🔥 Fuego en el motor","💨 Aire de libertad"
 ];
 
-// ============ AUDIO ============
-let audioCtx = null;
-function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-}
-function playEngine() {
-  if (!audioCtx) return;
-  const now = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(80, now);
-  osc.frequency.linearRampToValueAtTime(240, now + 0.5);
-  osc.frequency.linearRampToValueAtTime(130, now + 1.0);
-  gain.gain.setValueAtTime(0.12, now);
-  gain.gain.linearRampToValueAtTime(0.25, now + 0.2);
-  gain.gain.linearRampToValueAtTime(0, now + 1.2);
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start(now); osc.stop(now + 1.2);
-}
-function playScreech() {
-  if (!audioCtx) return;
-  const now = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(900, now);
-  osc.frequency.exponentialRampToValueAtTime(280, now + 0.5);
-  gain.gain.setValueAtTime(0.2, now);
-  gain.gain.linearRampToValueAtTime(0, now + 0.6);
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start(now); osc.stop(now + 0.6);
-}
-function playBlip() {
-  if (!audioCtx) return;
-  const now = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(660, now);
-  osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
-  gain.gain.setValueAtTime(0.08, now);
-  gain.gain.linearRampToValueAtTime(0, now + 0.15);
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start(now); osc.stop(now + 0.15);
-}
-function playWarp() {
-  if (!audioCtx) return;
-  const now = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(120, now);
-  osc.frequency.exponentialRampToValueAtTime(1800, now + 0.9);
-  osc.frequency.exponentialRampToValueAtTime(300, now + 1.3);
-  gain.gain.setValueAtTime(0.001, now);
-  gain.gain.exponentialRampToValueAtTime(0.18, now + 0.4);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start(now); osc.stop(now + 1.3);
-}
+// ========================================================
+// 🌐 PERSONALIZACIÓN VÍA URL
+// ========================================================
 
-// ============ 🎵 MÚSICA DE FONDO ============
-function startMusic() {
-  if (musicStarted || !bgMusic) return;
-  musicStarted = true;
-  bgMusic.volume = 0;
-  bgMusic.play().then(() => {
-    // Fade-in suave
-    const start = performance.now();
-    const duration = 2000;
-    function fadeIn() {
-      const t = Math.min((performance.now() - start) / duration, 1);
-      bgMusic.volume = musicMuted ? 0 : MUSIC_BASE_VOLUME * t;
-      if (t < 1) requestAnimationFrame(fadeIn);
-      else currentMusicVolume = MUSIC_BASE_VOLUME;
+const ORIGINAL_CARS_STATE = JSON.parse(JSON.stringify(CARS.map(c => ({
+  id: c.id,
+  letterTitle: c.letterTitle,
+  letterBody: c.letterBody,
+  phrases: c.phrases
+}))));
+
+const urlParams = new URLSearchParams(window.location.search);
+
+let isCustomized = false;
+let customCarId = null;
+
+if (urlParams.has('custom')) {
+  isCustomized = true;
+  customCarId = urlParams.get('car');
+
+  const carToModify = CARS.find(c => c.id === customCarId);
+
+  if (carToModify) {
+    const customTitleParam = urlParams.get('title');
+    const customBodyParam = urlParams.get('body');
+    const customPhrasesRaw = urlParams.get('phrases');
+
+    if (customTitleParam) carToModify.letterTitle = customTitleParam;
+    if (customBodyParam) carToModify.letterBody = customBodyParam;
+
+    if (customPhrasesRaw) {
+      try {
+        const decoded = decodeURIComponent(escape(atob(customPhrasesRaw)));
+        const arr = JSON.parse(decoded);
+        if (Array.isArray(arr) && arr.length > 0) {
+          carToModify.phrases = arr;
+        }
+      } catch (err) {
+        console.warn('No se pudieron decodificar las frases personalizadas:', err);
+      }
     }
-    fadeIn();
-    if (muteBtn) muteBtn.classList.add('show');
-  }).catch(err => {
-    console.warn('Autoplay bloqueado:', err);
-  });
+
+    activeCarType = customCarId;
+  }
 }
 
-function updateMusicVolume() {
-  if (!musicStarted || !bgMusic || musicMuted) return;
-  let target = MUSIC_BASE_VOLUME;
-  if (raceActive) {
-    target = MUSIC_BASE_VOLUME * 0.55;          // baja durante la carrera
-  } else if (raceFinished) {
-    target = MUSIC_BASE_VOLUME * 0.95;          // sube al final (carta)
-  } else if (phase4 && !phase4.classList.contains('hidden')) {
-    target = MUSIC_BASE_VOLUME * 0.9;           // carta abierta
-  } else if (phase2 && !phase2.classList.contains('hidden')) {
-    target = MUSIC_BASE_VOLUME * 0.75;          // garage
-  } else if (phase3 && !phase3.classList.contains('hidden')) {
-    target = MUSIC_BASE_VOLUME * 0.6;           // pantalla de carrera
+function encodePhrasesToBase64(phrasesArray) {
+  try {
+    const json = JSON.stringify(phrasesArray);
+    return btoa(unescape(encodeURIComponent(json)));
+  } catch (e) {
+    return '';
   }
-  // Suavizado exponencial
-  currentMusicVolume += (target - currentMusicVolume) * 0.03;
-  bgMusic.volume = currentMusicVolume;
 }
 
-function toggleMute() {
-  musicMuted = !musicMuted;
-  if (muteBtn) {
-    muteBtn.classList.toggle('muted', musicMuted);
-    muteBtn.textContent = musicMuted ? '🔇' : '🔊';
-  }
-  if (bgMusic) {
-    bgMusic.volume = musicMuted ? 0 : MUSIC_BASE_VOLUME;
-    if (!musicMuted) currentMusicVolume = MUSIC_BASE_VOLUME;
-  }
+// ============ AUDIO ============
+
+let audioCtx = null;
+
+function initAudio() {
+if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playEngine() {
+if (!audioCtx) return;
+const now = audioCtx.currentTime;
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+osc.type = 'sawtooth';
+osc.frequency.setValueAtTime(80, now);
+osc.frequency.linearRampToValueAtTime(240, now + 0.5);
+osc.frequency.linearRampToValueAtTime(130, now + 1.0);
+gain.gain.setValueAtTime(0.12, now);
+gain.gain.linearRampToValueAtTime(0.25, now + 0.2);
+gain.gain.linearRampToValueAtTime(0, now + 1.2);
+osc.connect(gain).connect(audioCtx.destination);
+osc.start(now); osc.stop(now + 1.2);
+}
+
+function playScreech() {
+if (!audioCtx) return;
+const now = audioCtx.currentTime;
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+osc.type = 'sawtooth';
+osc.frequency.setValueAtTime(900, now);
+osc.frequency.exponentialRampToValueAtTime(280, now + 0.5);
+gain.gain.setValueAtTime(0.2, now);
+gain.gain.linearRampToValueAtTime(0, now + 0.6);
+osc.connect(gain).connect(audioCtx.destination);
+osc.start(now); osc.stop(now + 0.6);
+}
+
+function playBlip() {
+if (!audioCtx) return;
+const now = audioCtx.currentTime;
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+osc.type = 'square';
+osc.frequency.setValueAtTime(660, now);
+osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+gain.gain.setValueAtTime(0.08, now);
+gain.gain.linearRampToValueAtTime(0, now + 0.15);
+osc.connect(gain).connect(audioCtx.destination);
+osc.start(now); osc.stop(now + 0.15);
+}
+
+function playWarp() {
+if (!audioCtx) return;
+const now = audioCtx.currentTime;
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+osc.type = 'sine';
+osc.frequency.setValueAtTime(120, now);
+osc.frequency.exponentialRampToValueAtTime(1800, now + 0.9);
+osc.frequency.exponentialRampToValueAtTime(300, now + 1.3);
+gain.gain.setValueAtTime(0.001, now);
+gain.gain.exponentialRampToValueAtTime(0.18, now + 0.4);
+gain.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
+osc.connect(gain).connect(audioCtx.destination);
+osc.start(now); osc.stop(now + 1.3);
 }
 
 // ============ THREE.JS SETUP ============
+
 const container = document.getElementById('scene-container');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x03030a);
 scene.fog = new THREE.FogExp2(0x03030a, 0.0065);
+
 const camera = new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 3000);
 camera.position.set(0, 10, 32);
+
 const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -450,6 +950,7 @@ renderer.toneMappingExposure = 1.15;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 container.appendChild(renderer.domElement);
+
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
@@ -460,12 +961,15 @@ controls.minDistance = 8;
 controls.maxDistance = 140;
 controls.target.set(0, 0, 0);
 controls.enabled = false;
+
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.1, 0.7, 0.15);
 composer.addPass(bloom);
+
 scene.add(new THREE.AmbientLight(0x334455, 1.2));
 scene.add(new THREE.HemisphereLight(0x0099ff, 0xff4400, 1.0));
+
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
 dirLight.position.set(20, 40, 20);
 dirLight.castShadow = true;
@@ -475,66 +979,75 @@ dirLight.shadow.camera.right = 50;
 dirLight.shadow.camera.top = 50;
 dirLight.shadow.camera.bottom = -50;
 scene.add(dirLight);
+
 const neonLights = [];
 for (let i = 0; i < 6; i++) {
-  const pl = new THREE.PointLight(i%2===0 ? 0xff7700 : 0x00c8ff, 3, 60, 2);
-  scene.add(pl);
-  neonLights.push(pl);
+const pl = new THREE.PointLight(i%2===0 ? 0xff7700 : 0x00c8ff, 3, 60, 2);
+scene.add(pl);
+neonLights.push(pl);
 }
 
 // ============ TEXTURAS HELPER ============
+
 function makeRadialGlowTexture(r, g, b, size = 512) {
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-  grad.addColorStop(0, `rgba(${r},${g},${b},0.9)`);
-  grad.addColorStop(0.3, `rgba(${r},${g},${b},0.4)`);
-  grad.addColorStop(0.7, `rgba(${r},${g},${b},0.1)`);
-  grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, size, size);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
+const canvas = document.createElement('canvas');
+canvas.width = canvas.height = size;
+const ctx = canvas.getContext('2d');
+const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+grad.addColorStop(0, `rgba(${r},${g},${b},0.9)`);
+grad.addColorStop(0.3, `rgba(${r},${g},${b},0.4)`);
+grad.addColorStop(0.7, `rgba(${r},${g},${b},0.1)`);
+grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+ctx.fillStyle = grad;
+ctx.fillRect(0, 0, size, size);
+const tex = new THREE.CanvasTexture(canvas);
+tex.colorSpace = THREE.SRGBColorSpace;
+return tex;
 }
+
 function makeDotTexture() {
-  const size = 64;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-  grad.addColorStop(0, 'rgba(255,255,255,1)');
-  grad.addColorStop(0.4, 'rgba(255,255,255,0.6)');
-  grad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, size, size);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
+const size = 64;
+const canvas = document.createElement('canvas');
+canvas.width = canvas.height = size;
+const ctx = canvas.getContext('2d');
+const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+grad.addColorStop(0, 'rgba(255,255,255,1)');
+grad.addColorStop(0.4, 'rgba(255,255,255,0.6)');
+grad.addColorStop(1, 'rgba(255,255,255,0)');
+ctx.fillStyle = grad;
+ctx.fillRect(0, 0, size, size);
+const tex = new THREE.CanvasTexture(canvas);
+tex.colorSpace = THREE.SRGBColorSpace;
+return tex;
 }
 
 // ============ GALAXIA CENTRAL ============
+
 const galaxyCore = new THREE.Group();
 scene.add(galaxyCore);
+
 const coreGeo = new THREE.SphereGeometry(0.8, 32, 32);
 const coreMat = new THREE.MeshBasicMaterial({ color: 0xffcc66 });
 const coreMesh = new THREE.Mesh(coreGeo, coreMat);
 galaxyCore.add(coreMesh);
+
 const coreGlowTex = makeRadialGlowTexture(255, 200, 100);
 const coreGlow = new THREE.Sprite(new THREE.SpriteMaterial({
-  map: coreGlowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9
+map: coreGlowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9
 }));
 coreGlow.scale.set(8, 8, 1);
 galaxyCore.add(coreGlow);
+
 const ringMat1 = new THREE.MeshBasicMaterial({ color: 0xff7700, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
 const ring1 = new THREE.Mesh(new THREE.TorusGeometry(4, 0.06, 8, 120), ringMat1);
 ring1.rotation.x = Math.PI / 2;
 galaxyCore.add(ring1);
+
 const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x00c8ff, transparent: true, opacity: 0.45, side: THREE.DoubleSide });
 const ring2 = new THREE.Mesh(new THREE.TorusGeometry(6.5, 0.04, 8, 140), ringMat2);
 ring2.rotation.x = Math.PI / 2;
 galaxyCore.add(ring2);
+
 const ringMat3 = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
 const ring3 = new THREE.Mesh(new THREE.TorusGeometry(9, 0.03, 8, 160), ringMat3);
 ring3.rotation.x = Math.PI / 2;
@@ -545,339 +1058,378 @@ const spiralColors = [];
 const SPIRAL_ARMS = 4;
 const PARTICLES_PER_ARM = 500;
 const GALAXY_RADIUS = 14;
+
 for (let arm = 0; arm < SPIRAL_ARMS; arm++) {
-  const armOffset = (arm / SPIRAL_ARMS) * Math.PI * 2;
-  for (let i = 0; i < PARTICLES_PER_ARM; i++) {
-    const t = i / PARTICLES_PER_ARM;
-    const radius = 0.5 + t * GALAXY_RADIUS;
-    const angle = armOffset + t * Math.PI * 3.5;
-    const spread = (Math.random() - 0.5) * (0.4 + t * 1.8);
-    const spreadY = (Math.random() - 0.5) * (0.3 + t * 0.9);
-    spiralPoints.push(Math.cos(angle) * radius + spread, spreadY, Math.sin(angle) * radius + spread);
-    const mix = t;
-    spiralColors.push(1.0 * (1 - mix) + 0.0 * mix, 0.55 * (1 - mix) + 0.75 * mix, 0.15 * (1 - mix) + 1.0 * mix);
-  }
+const armOffset = (arm / SPIRAL_ARMS) * Math.PI * 2;
+for (let i = 0; i < PARTICLES_PER_ARM; i++) {
+const t = i / PARTICLES_PER_ARM;
+const radius = 0.5 + t * GALAXY_RADIUS;
+const angle = armOffset + t * Math.PI * 3.5;
+const spread = (Math.random() - 0.5) * (0.4 + t * 1.8);
+const spreadY = (Math.random() - 0.5) * (0.3 + t * 0.9);
+spiralPoints.push(Math.cos(angle) * radius + spread, spreadY, Math.sin(angle) * radius + spread);
+const mix = t;
+spiralColors.push(1.0 * (1 - mix) + 0.0 * mix, 0.55 * (1 - mix) + 0.75 * mix, 0.15 * (1 - mix) + 1.0 * mix);
 }
+}
+
 const spiralGeo = new THREE.BufferGeometry();
 spiralGeo.setAttribute('position', new THREE.Float32BufferAttribute(spiralPoints, 3));
 spiralGeo.setAttribute('color', new THREE.Float32BufferAttribute(spiralColors, 3));
+
 const spiralTex = makeDotTexture();
 const spiralMat = new THREE.PointsMaterial({
-  size: 0.28, map: spiralTex, vertexColors: true, transparent: true,
-  blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9, sizeAttenuation: true
+size: 0.28, map: spiralTex, vertexColors: true, transparent: true,
+blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9, sizeAttenuation: true
 });
 const spiralParticles = new THREE.Points(spiralGeo, spiralMat);
 galaxyCore.add(spiralParticles);
+
+// ============ POLVO ESPACIAL ORBITANDO EL NÚCLEO ============
 
 const dustCount = 200;
 const dustGeo = new THREE.BufferGeometry();
 const dustPos = new Float32Array(dustCount * 3);
 const dustData = [];
+
 for (let i = 0; i < dustCount; i++) {
-  const r = 2 + Math.random() * 12;
-  const a = Math.random() * Math.PI * 2;
-  const y = (Math.random() - 0.5) * 3;
-  dustPos[i*3] = Math.cos(a) * r;
-  dustPos[i*3+1] = y;
-  dustPos[i*3+2] = Math.sin(a) * r;
-  dustData.push({ angle: a, radius: r, baseY: y, speed: (Math.random() - 0.5) * 0.3 });
+const r = 2 + Math.random() * 12;
+const a = Math.random() * Math.PI * 2;
+const y = (Math.random() - 0.5) * 3;
+dustPos[i*3] = Math.cos(a) * r;
+dustPos[i*3+1] = y;
+dustPos[i*3+2] = Math.sin(a) * r;
+dustData.push({ angle: a, radius: r, baseY: y, speed: (Math.random() - 0.5) * 0.3 });
 }
+
 dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
 const dustMat = new THREE.PointsMaterial({
-  size: 0.18, map: spiralTex, color: 0xffcc88,
-  transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.75
+size: 0.18, map: spiralTex, color: 0xffcc88,
+transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.75
 });
 const dustPoints = new THREE.Points(dustGeo, dustMat);
 galaxyCore.add(dustPoints);
 
+// ============ ESTRELLAS DE FONDO ============
+
 const starGeo = new THREE.BufferGeometry();
 const starPos = [];
 const starCol = [];
+
 for (let i = 0; i < 1600; i++) {
-  const r = 40 + Math.random() * 120;
-  const theta = Math.random() * Math.PI * 2;
-  const phi = Math.acos(2 * Math.random() - 1);
-  starPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi) * 0.6, r * Math.sin(phi) * Math.sin(theta));
-  const c = Math.random();
-  if (c < 0.4) starCol.push(1, 1, 1);
-  else if (c < 0.6) starCol.push(1, 0.7, 0.4);
-  else if (c < 0.8) starCol.push(0.4, 0.8, 1);
-  else if (c < 0.9) starCol.push(1, 0.4, 0.7);
-  else starCol.push(0.7, 1, 0.4);
+const r = 40 + Math.random() * 120;
+const theta = Math.random() * Math.PI * 2;
+const phi = Math.acos(2 * Math.random() - 1);
+starPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi) * 0.6, r * Math.sin(phi) * Math.sin(theta));
+const c = Math.random();
+if (c < 0.4) starCol.push(1, 1, 1);
+else if (c < 0.6) starCol.push(1, 0.7, 0.4);
+else if (c < 0.8) starCol.push(0.4, 0.8, 1);
+else if (c < 0.9) starCol.push(1, 0.4, 0.7);
+else starCol.push(0.7, 1, 0.4);
 }
+
 starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
 starGeo.setAttribute('color', new THREE.Float32BufferAttribute(starCol, 3));
+
 const starMat = new THREE.PointsMaterial({
-  size: 0.55, map: spiralTex, vertexColors: true, transparent: true,
-  blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+size: 0.55, map: spiralTex, vertexColors: true, transparent: true,
+blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
 });
 const starField = new THREE.Points(starGeo, starMat);
 scene.add(starField);
+
+// ============ ESTRELLITAS PARPADEANTES ============
 
 const twinkleCount = 800;
 const twinkleGeo = new THREE.BufferGeometry();
 const twinklePos = new Float32Array(twinkleCount * 3);
 const twinkleCol = new Float32Array(twinkleCount * 3);
 const twinkleData = [];
+
 for (let i = 0; i < twinkleCount; i++) {
-  const r = 1 + Math.random() * 38;
-  const theta = Math.random() * Math.PI * 2;
-  const phi = Math.acos(2 * Math.random() - 1);
-  const x = r * Math.sin(phi) * Math.cos(theta);
-  const y = r * Math.cos(phi) * 0.5;
-  const z = r * Math.sin(phi) * Math.sin(theta);
-  twinklePos[i*3] = x;
-  twinklePos[i*3+1] = y;
-  twinklePos[i*3+2] = z;
-  const c = Math.random();
-  let r0, g0, b0;
-  if (c < 0.4) { r0=1; g0=1; b0=1; }
-  else if (c < 0.6) { r0=1; g0=0.7; b0=0.3; }
-  else if (c < 0.8) { r0=0.3; g0=0.8; b0=1; }
-  else { r0=1; g0=0.4; b0=0.8; }
-  twinkleCol[i*3] = r0;
-  twinkleCol[i*3+1] = g0;
-  twinkleCol[i*3+2] = b0;
-  twinkleData.push({ baseY: y, phase: Math.random() * Math.PI * 2, speed: 1.5 + Math.random() * 3 });
+const r = 1 + Math.random() * 38;
+const theta = Math.random() * Math.PI * 2;
+const phi = Math.acos(2 * Math.random() - 1);
+const x = r * Math.sin(phi) * Math.cos(theta);
+const y = r * Math.cos(phi) * 0.5;
+const z = r * Math.sin(phi) * Math.sin(theta);
+twinklePos[i*3] = x;
+twinklePos[i*3+1] = y;
+twinklePos[i*3+2] = z;
+const c = Math.random();
+let r0, g0, b0;
+if (c < 0.4) { r0=1; g0=1; b0=1; }
+else if (c < 0.6) { r0=1; g0=0.7; b0=0.3; }
+else if (c < 0.8) { r0=0.3; g0=0.8; b0=1; }
+else { r0=1; g0=0.4; b0=0.8; }
+twinkleCol[i*3] = r0;
+twinkleCol[i*3+1] = g0;
+twinkleCol[i*3+2] = b0;
+twinkleData.push({ baseY: y, phase: Math.random() * Math.PI * 2, speed: 1.5 + Math.random() * 3 });
 }
+
 twinkleGeo.setAttribute('position', new THREE.BufferAttribute(twinklePos, 3));
 twinkleGeo.setAttribute('color', new THREE.BufferAttribute(twinkleCol, 3));
+
 const twinkleMat = new THREE.PointsMaterial({
-  size: 0.35, map: spiralTex, vertexColors: true, transparent: true,
-  blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true, opacity: 1
+size: 0.35, map: spiralTex, vertexColors: true, transparent: true,
+blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true, opacity: 1
 });
 const twinkleStars = new THREE.Points(twinkleGeo, twinkleMat);
 galaxyCore.add(twinkleStars);
 
+// ============ RAYOS 3D ============
+
 const spaceDecorGroup = new THREE.Group();
 scene.add(spaceDecorGroup);
+
 const rayGroup = new THREE.Group();
 spaceDecorGroup.add(rayGroup);
+
 const rayCount = 160;
 const rayData = [];
+
 for (let i = 0; i < rayCount; i++) {
-  const isCyan = Math.random() > 0.5;
-  const color = isCyan ? 0x00e0ff : 0xffaa00;
-  const len = 2 + Math.random() * 7;
-  const geo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, len)
-  ]);
-  const mat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.3 + Math.random() * 0.5 });
-  const line = new THREE.Line(geo, mat);
-  const r = 8 + Math.random() * 50;
-  const theta = Math.random() * Math.PI * 2;
-  const phi = Math.acos(2 * Math.random() - 1);
-  line.position.set(r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi) * 0.6, r * Math.sin(phi) * Math.sin(theta));
-  line.lookAt(0, 0, 0);
-  line.userData = {
-    baseRadius: r, baseTheta: theta, basePhi: phi,
-    orbitSpeed: (Math.random() - 0.5) * 0.15,
-    flashSpeed: 1 + Math.random() * 3,
-    flashPhase: Math.random() * Math.PI * 2,
-    baseOpacity: mat.opacity
-  };
-  rayGroup.add(line);
-  rayData.push(line);
+const isCyan = Math.random() > 0.5;
+const color = isCyan ? 0x00e0ff : 0xffaa00;
+const len = 2 + Math.random() * 7;
+const geo = new THREE.BufferGeometry().setFromPoints([
+new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, len)
+]);
+const mat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.3 + Math.random() * 0.5 });
+const line = new THREE.Line(geo, mat);
+const r = 8 + Math.random() * 50;
+const theta = Math.random() * Math.PI * 2;
+const phi = Math.acos(2 * Math.random() - 1);
+line.position.set(r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi) * 0.6, r * Math.sin(phi) * Math.sin(theta));
+line.lookAt(0, 0, 0);
+line.userData = {
+baseRadius: r, baseTheta: theta, basePhi: phi,
+orbitSpeed: (Math.random() - 0.5) * 0.15,
+flashSpeed: 1 + Math.random() * 3,
+flashPhase: Math.random() * Math.PI * 2,
+baseOpacity: mat.opacity
+};
+rayGroup.add(line);
+rayData.push(line);
 }
+
+// ============ EMOJIS ESPARCIDOS ============
 
 const emojiSprites = [];
 const emojiColors = ['#ff7700', '#ffcc00', '#00c8ff', '#ff4488', '#00ffaa', '#ff2266', '#aa66ff'];
+
 function makeEmojiTexture(emoji, glowColor) {
-  const size = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  ctx.font = `${size * 0.7}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.shadowColor = glowColor;
-  ctx.shadowBlur = 30;
-  ctx.fillText(emoji, size/2, size/2 + 6);
-  ctx.fillText(emoji, size/2, size/2 + 6);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.minFilter = THREE.LinearFilter;
-  return tex;
+const size = 256;
+const canvas = document.createElement('canvas');
+canvas.width = canvas.height = size;
+const ctx = canvas.getContext('2d');
+ctx.font = `${size * 0.7}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+ctx.shadowColor = glowColor;
+ctx.shadowBlur = 30;
+ctx.fillText(emoji, size/2, size/2 + 6);
+ctx.fillText(emoji, size/2, size/2 + 6);
+const tex = new THREE.CanvasTexture(canvas);
+tex.colorSpace = THREE.SRGBColorSpace;
+tex.minFilter = THREE.LinearFilter;
+return tex;
 }
+
 const EMOJI_COUNT = 220;
 const EMOJI_MIN_RADIUS = 24;
 const EMOJI_MAX_RADIUS = 100;
 const EMOJI_Y_COMPRESS = 0.45;
+
 function fibSpherePoint(i, n) {
-  const k = i + 0.5;
-  const phi = Math.acos(1 - 2 * k / n);
-  const theta = Math.PI * (1 + Math.sqrt(5)) * k;
-  return { phi, theta };
+const k = i + 0.5;
+const phi = Math.acos(1 - 2 * k / n);
+const theta = Math.PI * (1 + Math.sqrt(5)) * k;
+return { phi, theta };
 }
+
 for (let i = 0; i < EMOJI_COUNT; i++) {
-  const emoji = SPEED_EMOJIS[Math.floor(Math.random() * SPEED_EMOJIS.length)];
-  const glowColor = emojiColors[Math.floor(Math.random() * emojiColors.length)];
-  const tex = makeEmojiTexture(emoji, glowColor);
-  const mat = new THREE.SpriteMaterial({
-    map: tex, transparent: true, depthWrite: false, blending: THREE.NormalBlending, opacity: 0.9
-  });
-  const sprite = new THREE.Sprite(mat);
-  const scale = 0.5 + Math.random() * 1.3;
-  sprite.scale.set(scale, scale, 1);
-  const { phi, theta } = fibSpherePoint(i, EMOJI_COUNT);
-  const t = (i * 0.61803398875) % 1;
-  const r = EMOJI_MIN_RADIUS + t * (EMOJI_MAX_RADIUS - EMOJI_MIN_RADIUS);
-  const x = r * Math.sin(phi) * Math.cos(theta);
-  const y = r * Math.cos(phi) * EMOJI_Y_COMPRESS;
-  const z = r * Math.sin(phi) * Math.sin(theta);
-  sprite.position.set(x, y, z);
-  const baseR = Math.sqrt(x * x + z * z);
-  const baseAngle = Math.atan2(z, x);
-  sprite.userData = {
-    baseY: y,
-    baseR,
-    baseAngle,
-    orbitSpeed: (Math.random() - 0.5) * 0.08,
-    floatSpeed: 0.3 + Math.random() * 1.1,
-    floatPhase: Math.random() * Math.PI * 2,
-    floatAmp: 0.6 + Math.random() * 2.0,
-    rotSpeed: (Math.random() - 0.5) * 1.8,
-    baseOpacity: mat.opacity,
-    twinkleSpeed: 0.8 + Math.random() * 2.5,
-    twinklePhase: Math.random() * Math.PI * 2,
-    scaleBase: scale,
-    scaleAmp: 0.05 + Math.random() * 0.15,
-    scaleSpeed: 0.5 + Math.random() * 1.5,
-    scalePhase: Math.random() * Math.PI * 2
-  };
-  spaceDecorGroup.add(sprite);
-  emojiSprites.push(sprite);
+const emoji = SPEED_EMOJIS[Math.floor(Math.random() * SPEED_EMOJIS.length)];
+const glowColor = emojiColors[Math.floor(Math.random() * emojiColors.length)];
+const tex = makeEmojiTexture(emoji, glowColor);
+const mat = new THREE.SpriteMaterial({
+map: tex, transparent: true, depthWrite: false, blending: THREE.NormalBlending, opacity: 0.9
+});
+const sprite = new THREE.Sprite(mat);
+const scale = 0.5 + Math.random() * 1.3;
+sprite.scale.set(scale, scale, 1);
+const { phi, theta } = fibSpherePoint(i, EMOJI_COUNT);
+const t = (i * 0.61803398875) % 1;
+const r = EMOJI_MIN_RADIUS + t * (EMOJI_MAX_RADIUS - EMOJI_MIN_RADIUS);
+const x = r * Math.sin(phi) * Math.cos(theta);
+const y = r * Math.cos(phi) * EMOJI_Y_COMPRESS;
+const z = r * Math.sin(phi) * Math.sin(theta);
+sprite.position.set(x, y, z);
+const baseR = Math.sqrt(x * x + z * z);
+const baseAngle = Math.atan2(z, x);
+sprite.userData = {
+baseY: y,
+baseR,
+baseAngle,
+orbitSpeed: (Math.random() - 0.5) * 0.08,
+floatSpeed: 0.3 + Math.random() * 1.1,
+floatPhase: Math.random() * Math.PI * 2,
+floatAmp: 0.6 + Math.random() * 2.0,
+rotSpeed: (Math.random() - 0.5) * 1.8,
+baseOpacity: mat.opacity,
+twinkleSpeed: 0.8 + Math.random() * 2.5,
+twinklePhase: Math.random() * Math.PI * 2,
+scaleBase: scale,
+scaleAmp: 0.05 + Math.random() * 0.15,
+scaleSpeed: 0.5 + Math.random() * 1.5,
+scalePhase: Math.random() * Math.PI * 2
+};
+spaceDecorGroup.add(sprite);
+emojiSprites.push(sprite);
 }
+
+// ============ GALAXIA DE CARRITOS ============
 
 const galaxyGroup = new THREE.Group();
 scene.add(galaxyGroup);
+
 const carSprites = [];
 const phraseSprites = [];
+
 function makeCarSpriteTexture(car) {
-  const canvas = document.createElement('canvas');
-  const size = 512;
-  canvas.width = size; canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => {
-    ctx.clearRect(0, 0, size, size);
-    const ratio = img.width / img.height;
-    let w = size * 0.85;
-    let h = w / ratio;
-    if (h > size * 0.85) { h = size * 0.85; w = h * ratio; }
-    const x = (size - w) / 2;
-    const y = (size - h) / 2;
-    ctx.shadowColor = '#' + car.color.toString(16).padStart(6, '0');
-    ctx.shadowBlur = 40;
-    ctx.drawImage(img, x, y, w, h);
-    ctx.drawImage(img, x, y, w, h);
-    tex.needsUpdate = true;
-  };
-  img.onerror = () => {
-    ctx.clearRect(0, 0, size, size);
-    ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.fillRect(40, 40, size-80, size-80);
-    ctx.strokeStyle = '#' + car.color.toString(16).padStart(6, '0');
-    ctx.lineWidth = 4;
-    ctx.setLineDash([12, 8]);
-    ctx.strokeRect(40, 40, size-80, size-80);
-    ctx.fillStyle = '#' + car.color.toString(16).padStart(6, '0');
-    ctx.font = 'bold 28px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(car.name, size/2, size/2);
-    ctx.fillStyle = '#fff';
-    ctx.font = '20px monospace';
-    ctx.fillText('[ PON TU PNG ]', size/2, size/2 + 40);
-    tex.needsUpdate = true;
-  };
-  img.src = car.image;
-  return tex;
-}
-function makePhraseSpriteTexture(text, colorHex) {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  const fontSize = 64;
-  ctx.font = `900 ${fontSize}px 'Orbitron', 'Segoe UI', Arial, sans-serif`;
-  const metrics = ctx.measureText(text);
-  const padX = fontSize * 1.2;
-  const padY = fontSize * 1.0;
-  canvas.width = Math.ceil(metrics.width + padX * 2);
-  canvas.height = Math.ceil(fontSize + padY * 2);
-  const c = canvas.getContext('2d');
-  c.font = `900 ${fontSize}px 'Orbitron', 'Segoe UI', Arial, sans-serif`;
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
-  c.lineWidth = fontSize * 0.18;
-  c.strokeStyle = '#000000';
-  c.lineJoin = 'round';
-  c.strokeText(text, cx, cy);
-  c.shadowColor = colorHex;
-  c.shadowBlur = fontSize * 0.7;
-  c.fillStyle = colorHex;
-  c.fillText(text, cx, cy);
-  c.fillText(text, cx, cy);
-  c.shadowBlur = 0;
-  c.fillStyle = '#ffffff';
-  c.fillText(text, cx, cy);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.minFilter = THREE.LinearFilter;
-  tex.magFilter = THREE.LinearFilter;
-  return tex;
-}
-function buildGalaxy() {
-  galaxyGroup.clear();
-  carSprites.length = 0;
-  phraseSprites.length = 0;
-  const isMobile = window.innerWidth < 768;
-  const carCount = CARS.length;
-  const carRadius = isMobile ? 18 : 22;
-  CARS.forEach((car, i) => {
-    const angle = (i / carCount) * Math.PI * 2;
-    const y = (Math.random() - 0.5) * 4;
-    const tex = makeCarSpriteTexture(car);
-    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.NormalBlending });
-    const sprite = new THREE.Sprite(mat);
-    const s = isMobile ? 5 : 6;
-    sprite.scale.set(s, s, 1);
-    sprite.position.set(Math.cos(angle) * carRadius, y, Math.sin(angle) * carRadius);
-    sprite.userData = {
-      carId: car.id, carData: car, baseAngle: angle, baseRadius: carRadius, baseY: y,
-      floatSpeed: 0.5 + Math.random() * 0.8, floatPhase: Math.random() * Math.PI * 2,
-      floatAmp: 0.6 + Math.random() * 1.2, orbitSpeed: 0.03 + Math.random() * 0.03, isCar: true
-    };
-    galaxyGroup.add(sprite);
-    carSprites.push(sprite);
-  });
-  const phraseColors = ['#ff7700', '#00c8ff', '#ffcc00', '#ff4488', '#00ffaa', '#ff2266', '#aa66ff'];
-  SPACE_PHRASES.forEach((phrase, i) => {
-    const angle = Math.random() * Math.PI * 2;
-    const radius = 10 + Math.random() * 15;
-    const y = (Math.random() - 0.5) * 14;
-    const colorHex = phraseColors[i % phraseColors.length];
-    const tex = makePhraseSpriteTexture(phrase, colorHex);
-    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.NormalBlending, opacity: 0.85 });
-    const sprite = new THREE.Sprite(mat);
-    const h = 0.9 + Math.random() * 0.4;
-    const aspect = tex.image.width / tex.image.height;
-    sprite.scale.set(h * aspect, h, 1);
-    sprite.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
-    sprite.userData = {
-      baseAngle: angle, baseRadius: radius, baseY: y,
-      floatSpeed: 0.3 + Math.random() * 0.6, floatPhase: Math.random() * Math.PI * 2,
-      floatAmp: 0.5 + Math.random() * 1.0, orbitSpeed: (Math.random() - 0.5) * 0.04, isPhrase: true
-    };
-    galaxyGroup.add(sprite);
-    phraseSprites.push(sprite);
-  });
+const canvas = document.createElement('canvas');
+const size = 512;
+canvas.width = size; canvas.height = size;
+const ctx = canvas.getContext('2d');
+const tex = new THREE.CanvasTexture(canvas);
+tex.colorSpace = THREE.SRGBColorSpace;
+const img = new Image();
+img.crossOrigin = 'anonymous';
+img.onload = () => {
+ctx.clearRect(0, 0, size, size);
+const ratio = img.width / img.height;
+let w = size * 0.85;
+let h = w / ratio;
+if (h > size * 0.85) { h = size * 0.85; w = h * ratio; }
+const x = (size - w) / 2;
+const y = (size - h) / 2;
+ctx.shadowColor = '#' + car.color.toString(16).padStart(6, '0');
+ctx.shadowBlur = 40;
+ctx.drawImage(img, x, y, w, h);
+ctx.drawImage(img, x, y, w, h);
+tex.needsUpdate = true;
+};
+img.onerror = () => {
+ctx.clearRect(0, 0, size, size);
+ctx.fillStyle = 'rgba(0,0,0,0.4)';
+ctx.fillRect(40, 40, size-80, size-80);
+ctx.strokeStyle = '#' + car.color.toString(16).padStart(6, '0');
+ctx.lineWidth = 4;
+ctx.setLineDash([12, 8]);
+ctx.strokeRect(40, 40, size-80, size-80);
+ctx.fillStyle = '#' + car.color.toString(16).padStart(6, '0');
+ctx.font = 'bold 28px monospace';
+ctx.textAlign = 'center';
+ctx.fillText(car.name, size/2, size/2);
+ctx.fillStyle = '#fff';
+ctx.font = '20px monospace';
+ctx.fillText('[ PON TU PNG ]', size/2, size/2 + 40);
+tex.needsUpdate = true;
+};
+img.src = car.image;
+return tex;
 }
 
-// ============ 🌧️ LLUVIA ESPACIAL ============
+function makePhraseSpriteTexture(text, colorHex) {
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+const fontSize = 64;
+ctx.font = `900 ${fontSize}px 'Orbitron', 'Segoe UI', Arial, sans-serif`;
+const metrics = ctx.measureText(text);
+const padX = fontSize * 1.2;
+const padY = fontSize * 1.0;
+canvas.width = Math.ceil(metrics.width + padX * 2);
+canvas.height = Math.ceil(fontSize + padY * 2);
+const c = canvas.getContext('2d');
+c.font = `900 ${fontSize}px 'Orbitron', 'Segoe UI', Arial, sans-serif`;
+c.textAlign = 'center';
+c.textBaseline = 'middle';
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
+c.lineWidth = fontSize * 0.18;
+c.strokeStyle = '#000000';
+c.lineJoin = 'round';
+c.strokeText(text, cx, cy);
+c.shadowColor = colorHex;
+c.shadowBlur = fontSize * 0.7;
+c.fillStyle = colorHex;
+c.fillText(text, cx, cy);
+c.fillText(text, cx, cy);
+c.shadowBlur = 0;
+c.fillStyle = '#ffffff';
+c.fillText(text, cx, cy);
+const tex = new THREE.CanvasTexture(canvas);
+tex.colorSpace = THREE.SRGBColorSpace;
+tex.minFilter = THREE.LinearFilter;
+tex.magFilter = THREE.LinearFilter;
+return tex;
+}
+
+function buildGalaxy() {
+galaxyGroup.clear();
+carSprites.length = 0;
+phraseSprites.length = 0;
+
+const isMobile = window.innerWidth < 768;
+const carCount = CARS.length;
+const carRadius = isMobile ? 18 : 22;
+
+CARS.forEach((car, i) => {
+const angle = (i / carCount) * Math.PI * 2;
+const y = (Math.random() - 0.5) * 4;
+const tex = makeCarSpriteTexture(car);
+const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.NormalBlending });
+const sprite = new THREE.Sprite(mat);
+const s = isMobile ? 5 : 6;
+sprite.scale.set(s, s, 1);
+sprite.position.set(Math.cos(angle) * carRadius, y, Math.sin(angle) * carRadius);
+sprite.userData = {
+carId: car.id, carData: car, baseAngle: angle, baseRadius: carRadius, baseY: y,
+floatSpeed: 0.5 + Math.random() * 0.8, floatPhase: Math.random() * Math.PI * 2,
+floatAmp: 0.6 + Math.random() * 1.2, orbitSpeed: 0.03 + Math.random() * 0.03, isCar: true
+};
+galaxyGroup.add(sprite);
+carSprites.push(sprite);
+});
+
+const phraseColors = ['#ff7700', '#00c8ff', '#ffcc00', '#ff4488', '#00ffaa', '#ff2266', '#aa66ff'];
+
+SPACE_PHRASES.forEach((phrase, i) => {
+const angle = Math.random() * Math.PI * 2;
+const radius = 10 + Math.random() * 15;
+const y = (Math.random() - 0.5) * 14;
+const colorHex = phraseColors[i % phraseColors.length];
+const tex = makePhraseSpriteTexture(phrase, colorHex);
+const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.NormalBlending, opacity: 0.85 });
+const sprite = new THREE.Sprite(mat);
+const h = 0.9 + Math.random() * 0.4;
+const aspect = tex.image.width / tex.image.height;
+sprite.scale.set(h * aspect, h, 1);
+sprite.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+sprite.userData = {
+baseAngle: angle, baseRadius: radius, baseY: y,
+floatSpeed: 0.3 + Math.random() * 0.6, floatPhase: Math.random() * Math.PI * 2,
+floatAmp: 0.5 + Math.random() * 1.0, orbitSpeed: (Math.random() - 0.5) * 0.04, isPhrase: true
+};
+galaxyGroup.add(sprite);
+phraseSprites.push(sprite);
+});
+}
+
+// ============ LLUVIA ESPACIAL ============
+
 const rainGroup = new THREE.Group();
 rainGroup.visible = false;
 scene.add(rainGroup);
@@ -886,39 +1438,42 @@ const RAIN_COUNT = 600;
 const RAIN_AREA_X = 60;
 const RAIN_AREA_Y = 55;
 const RAIN_AREA_Z = 140;
+
 const rainGeo = new THREE.BufferGeometry();
 const rainPositions = new Float32Array(RAIN_COUNT * 3);
 const rainVelocities = [];
 const rainColors = new Float32Array(RAIN_COUNT * 3);
 
 for (let i = 0; i < RAIN_COUNT; i++) {
-  rainPositions[i*3] = (Math.random() - 0.5) * RAIN_AREA_X;
-  rainPositions[i*3+1] = Math.random() * RAIN_AREA_Y;
-  rainPositions[i*3+2] = (Math.random() - 0.5) * RAIN_AREA_Z;
-  rainVelocities.push({
-    y: 55 + Math.random() * 60,
-    x: (Math.random() - 0.5) * 3,
-    z: (Math.random() - 0.5) * 3
-  });
-  if (Math.random() > 0.5) {
-    rainColors[i*3] = 0.4; rainColors[i*3+1] = 0.85; rainColors[i*3+2] = 1;
-  } else {
-    rainColors[i*3] = 1; rainColors[i*3+1] = 0.8; rainColors[i*3+2] = 0.3;
-  }
+rainPositions[i*3] = (Math.random() - 0.5) * RAIN_AREA_X;
+rainPositions[i*3+1] = Math.random() * RAIN_AREA_Y;
+rainPositions[i*3+2] = (Math.random() - 0.5) * RAIN_AREA_Z;
+rainVelocities.push({
+y: 55 + Math.random() * 60,
+x: (Math.random() - 0.5) * 3,
+z: (Math.random() - 0.5) * 3
+});
+if (Math.random() > 0.5) {
+rainColors[i*3] = 0.4; rainColors[i*3+1] = 0.85; rainColors[i*3+2] = 1;
+} else {
+rainColors[i*3] = 1; rainColors[i*3+1] = 0.8; rainColors[i*3+2] = 0.3;
 }
+}
+
 rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPositions, 3));
 rainGeo.setAttribute('color', new THREE.BufferAttribute(rainColors, 3));
+
 const rainDropTex = makeDotTexture();
 const rainMat = new THREE.PointsMaterial({
-  size: 1.2,
-  map: rainDropTex,
-  vertexColors: true,
-  transparent: true,
-  blending: THREE.AdditiveBlending,
-  depthWrite: false,
-  opacity: 1.0,
-  sizeAttenuation: true,
-  fog: false
+size: 1.2,
+map: rainDropTex,
+vertexColors: true,
+transparent: true,
+blending: THREE.AdditiveBlending,
+depthWrite: false,
+opacity: 1.0,
+sizeAttenuation: true,
+fog: false
 });
 const rainPoints = new THREE.Points(rainGeo, rainMat);
 rainGroup.add(rainPoints);
@@ -927,32 +1482,35 @@ const rainStreakCount = 200;
 const rainStreakGeo = new THREE.BufferGeometry();
 const streakPositions = new Float32Array(rainStreakCount * 6);
 const streakData = [];
+
 for (let i = 0; i < rainStreakCount; i++) {
-  const x = (Math.random() - 0.5) * RAIN_AREA_X;
-  const y = Math.random() * RAIN_AREA_Y;
-  const z = (Math.random() - 0.5) * RAIN_AREA_Z;
-  const len = 2 + Math.random() * 3.5;
-  streakPositions[i*6] = x;
-  streakPositions[i*6+1] = y;
-  streakPositions[i*6+2] = z;
-  streakPositions[i*6+3] = x;
-  streakPositions[i*6+4] = y - len;
-  streakPositions[i*6+5] = z;
-  streakData.push({ len, speed: 70 + Math.random() * 80 });
+const x = (Math.random() - 0.5) * RAIN_AREA_X;
+const y = Math.random() * RAIN_AREA_Y;
+const z = (Math.random() - 0.5) * RAIN_AREA_Z;
+const len = 2 + Math.random() * 3.5;
+streakPositions[i*6] = x;
+streakPositions[i*6+1] = y;
+streakPositions[i*6+2] = z;
+streakPositions[i*6+3] = x;
+streakPositions[i*6+4] = y - len;
+streakPositions[i*6+5] = z;
+streakData.push({ len, speed: 70 + Math.random() * 80 });
 }
+
 rainStreakGeo.setAttribute('position', new THREE.BufferAttribute(streakPositions, 3));
 const rainStreakMat = new THREE.LineBasicMaterial({
-  color: 0xffffff,
-  transparent: true,
-  opacity: 0.9,
-  blending: THREE.AdditiveBlending,
-  depthWrite: false,
-  fog: false
+color: 0xffffff,
+transparent: true,
+opacity: 0.9,
+blending: THREE.AdditiveBlending,
+depthWrite: false,
+fog: false
 });
 const rainStreaks = new THREE.LineSegments(rainStreakGeo, rainStreakMat);
 rainGroup.add(rainStreaks);
 
-// ============ 💡 LUCES DEL AUTO ============
+// ============ LUCES DEL AUTO ============
+
 const carKeyLight = new THREE.PointLight(0xffffff, 0, 40, 2);
 carKeyLight.visible = false;
 scene.add(carKeyLight);
@@ -965,760 +1523,1172 @@ const carWarmLight = new THREE.PointLight(0xff8800, 0, 30, 2);
 carWarmLight.visible = false;
 scene.add(carWarmLight);
 
+const carSpotGlowTex = makeRadialGlowTexture(255, 220, 150);
+const carSpotGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+map: carSpotGlowTex,
+transparent: true,
+blending: THREE.AdditiveBlending,
+depthWrite: false,
+opacity: 0
+}));
+carSpotGlow.scale.set(12, 12, 1);
+scene.add(carSpotGlow);
+
 // ============ INTERACCIÓN ============
+
 renderer.domElement.addEventListener('pointerdown', (e) => {
-  pointerDownPos = { x: e.clientX, y: e.clientY, t: performance.now() };
+pointerDownPos = { x: e.clientX, y: e.clientY, t: performance.now() };
 });
+
 renderer.domElement.addEventListener('pointerup', (e) => {
-  if (!pointerDownPos) return;
-  const dx = e.clientX - pointerDownPos.x;
-  const dy = e.clientY - pointerDownPos.y;
-  const dist = Math.sqrt(dx*dx + dy*dy);
-  const dt = performance.now() - pointerDownPos.t;
-  pointerDownPos = null;
-  if (dist > 8 || dt > 500) return;
-  if (!phase2 || phase2.classList.contains('hidden')) return;
-  const rect = renderer.domElement.getBoundingClientRect();
-  mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-  mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-  raycaster.setFromCamera(mouseNDC, camera);
-  const intersects = raycaster.intersectObjects(carSprites, false);
-  if (intersects.length > 0) {
-    const hit = intersects[0].object;
-    if (hit.userData.carId) {
-      initAudio();
-      playBlip();
-      openCarCard(hit.userData.carId);
-    }
-  }
+if (!pointerDownPos) return;
+const dx = e.clientX - pointerDownPos.x;
+const dy = e.clientY - pointerDownPos.y;
+const dist = Math.sqrt(dx*dx + dy*dy);
+const dt = performance.now() - pointerDownPos.t;
+pointerDownPos = null;
+if (dist > 8 || dt > 500) return;
+if (!phase2 || phase2.classList.contains('hidden')) return;
+const rect = renderer.domElement.getBoundingClientRect();
+mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+raycaster.setFromCamera(mouseNDC, camera);
+const intersects = raycaster.intersectObjects(carSprites, false);
+if (intersects.length > 0) {
+const hit = intersects[0].object;
+if (hit.userData.carId) {
+initAudio();
+playBlip();
+openCarCard(hit.userData.carId);
+}
+}
 });
+
 renderer.domElement.addEventListener('pointermove', (e) => {
-  if (!phase2 || phase2.classList.contains('hidden')) {
-    renderer.domElement.style.cursor = 'default';
-    return;
-  }
-  const rect = renderer.domElement.getBoundingClientRect();
-  mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-  mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-  raycaster.setFromCamera(mouseNDC, camera);
-  const hits = raycaster.intersectObjects(carSprites, false);
-  renderer.domElement.style.cursor = hits.length > 0 ? 'pointer' : 'default';
+if (!phase2 || phase2.classList.contains('hidden')) {
+renderer.domElement.style.cursor = 'default';
+return;
+}
+const rect = renderer.domElement.getBoundingClientRect();
+mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+raycaster.setFromCamera(mouseNDC, camera);
+const hits = raycaster.intersectObjects(carSprites, false);
+renderer.domElement.style.cursor = hits.length > 0 ? 'pointer' : 'default';
 });
 
 // ============ LOADER ============
+
 const TARGET_LENGTH = 5.0;
+
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
+
 const gltfLoader = new GLTFLoader();
 gltfLoader.setDRACOLoader(dracoLoader);
 
 function updateLoadProgress() {
-  const pct = Math.round((loadedCount / totalToLoad) * 100);
-  if (loadProgressEl) loadProgressEl.style.width = pct + '%';
-  if (loadTextEl) loadTextEl.textContent = pct + '%';
-  if (loadedCount >= totalToLoad && loaderEl) {
-    setTimeout(() => loaderEl.classList.add('hidden'), 400);
-  }
+const pct = Math.round((loadedCount / totalToLoad) * 100);
+if (loadProgressEl) loadProgressEl.style.width = pct + '%';
+if (loadTextEl) loadTextEl.textContent = pct + '%';
+if (loadedCount >= totalToLoad && loaderEl) {
+setTimeout(() => loaderEl.classList.add('hidden'), 400);
+}
 }
 
 function processModel(model, car) {
-  const box = new THREE.Box3().setFromObject(model);
-  const size = box.getSize(new THREE.Vector3());
-  const maxDim = Math.max(size.x, size.y, size.z);
-  const scale = TARGET_LENGTH / maxDim;
-  model.scale.setScalar(scale);
-  const box2 = new THREE.Box3().setFromObject(model);
-  const center2 = box2.getCenter(new THREE.Vector3());
-  const min2 = box2.min;
-  model.position.x -= center2.x;
-  model.position.z -= center2.z;
-  model.position.y -= min2.y;
-  model.traverse(child => {
-    if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
-  });
-  return { model, size: size.clone().multiplyScalar(scale) };
+const box = new THREE.Box3().setFromObject(model);
+const size = box.getSize(new THREE.Vector3());
+const maxDim = Math.max(size.x, size.y, size.z);
+const scale = TARGET_LENGTH / maxDim;
+model.scale.setScalar(scale);
+const box2 = new THREE.Box3().setFromObject(model);
+const center2 = box2.getCenter(new THREE.Vector3());
+const min2 = box2.min;
+model.position.x -= center2.x;
+model.position.z -= center2.z;
+model.position.y -= min2.y;
+model.traverse(child => {
+if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
+});
+return { model, size: size.clone().multiplyScalar(scale) };
 }
 
 function loadModel(car) {
-  return new Promise((resolve) => {
-    gltfLoader.load(car.file, (gltf) => {
-      const result = processModel(gltf.scene, car);
-      modelCache[car.id] = { scene: result.model, size: result.size, rotationY: car.rotationY || 0, carData: car };
-      loadedCount++;
-      updateLoadProgress();
-      resolve(modelCache[car.id]);
-    }, undefined, (err) => {
-      console.warn('Error cargando', car.file, '--- usando placeholder');
-      const geo = new THREE.BoxGeometry(2.4, 1.5, 5);
-      const mat = new THREE.MeshStandardMaterial({ color: car.color, emissive: car.color, emissiveIntensity: 0.4, roughness: 0.4, metalness: 0.6 });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.y = 0.75;
-      const group = new THREE.Group();
-      group.add(mesh);
-      modelCache[car.id] = { scene: group, rotationY: car.rotationY || 0, carData: car };
-      loadedCount++;
-      updateLoadProgress();
-      resolve(modelCache[car.id]);
-    });
-  });
+return new Promise((resolve) => {
+gltfLoader.load(car.file, (gltf) => {
+const result = processModel(gltf.scene, car);
+modelCache[car.id] = { scene: result.model, size: result.size, rotationY: car.rotationY || 0, carData: car };
+loadedCount++;
+updateLoadProgress();
+resolve(modelCache[car.id]);
+}, undefined, (err) => {
+console.warn('Error cargando', car.file, '--- usando placeholder');
+const geo = new THREE.BoxGeometry(2.4, 1.5, 5);
+const mat = new THREE.MeshStandardMaterial({ color: car.color, emissive: car.color, emissiveIntensity: 0.4, roughness: 0.4, metalness: 0.6 });
+const mesh = new THREE.Mesh(geo, mat);
+mesh.position.y = 0.75;
+const group = new THREE.Group();
+group.add(mesh);
+modelCache[car.id] = { scene: group, rotationY: car.rotationY || 0, carData: car };
+loadedCount++;
+updateLoadProgress();
+resolve(modelCache[car.id]);
+});
+});
 }
 
 function createSpeedLines() {
-  const bg = document.getElementById('speedLinesBg');
-  if (!bg) return;
-  bg.innerHTML = '';
-  const count = window.innerWidth < 768 ? 40 : 70;
-  for (let i = 0; i < count; i++) {
-    const line = document.createElement('div');
-    line.className = 'speed-line' + (Math.random() > 0.5 ? ' cyan' : '');
-    line.style.top = Math.random() * 100 + '%';
-    line.style.width = (8 + Math.random() * 35) + 'vw';
-    line.style.animationDelay = (Math.random() * 1.5) + 's';
-    line.style.animationDuration = (0.5 + Math.random() * 1.2) + 's';
-    line.style.opacity = 0.3 + Math.random() * 0.7;
-    bg.appendChild(line);
-  }
+const bg = document.getElementById('speedLinesBg');
+if (!bg) return;
+bg.innerHTML = '';
+const count = window.innerWidth < 768 ? 40 : 70;
+for (let i = 0; i < count; i++) {
+const line = document.createElement('div');
+line.className = 'speed-line' + (Math.random() > 0.5 ? ' cyan' : '');
+line.style.top = Math.random() * 100 + '%';
+line.style.width = (8 + Math.random() * 35) + 'vw';
+line.style.animationDelay = (Math.random() * 1.5) + 's';
+line.style.animationDuration = (0.5 + Math.random() * 1.2) + 's';
+line.style.opacity = 0.3 + Math.random() * 0.7;
+bg.appendChild(line);
+}
 }
 
 // ============ ABRIR CARTA + MODELO ============
+
 function openCarCard(carId) {
-  const cached = modelCache[carId];
-  if (!cached) return;
-  activeCarType = carId;
-  activeCarData = cached.carData;
-  phase2.classList.add('hidden');
-  phase4.classList.remove('hidden');
-  controls.autoRotate = false;
-  const colorStr = '#' + activeCarData.color.toString(16).padStart(6, '0');
-  letterTitle.textContent = activeCarData.letterTitle;
-  letterBody.textContent = activeCarData.letterBody;
-  letterCard.style.borderColor = colorStr;
-  letterCard.style.boxShadow = `0 0 80px ${colorStr}, 0 0 140px ${colorStr}80`;
-  letterTitle.style.color = colorStr;
-  letterTitle.style.textShadow = `0 0 20px ${colorStr}`;
-  setTimeout(() => initModelViewer(carId), 100);
+const cached = modelCache[carId];
+if (!cached) return;
+
+if (customizeFab) customizeFab.classList.add('hidden');
+
+// 🎵 Mantener música sonando al abrir carta
+if (bgMusic && bgMusic.paused && musicStarted) {
+  bgMusic.play().catch(() => {});
+}
+
+activeCarType = carId;
+activeCarData = cached.carData;
+phase2.classList.add('hidden');
+phase4.classList.remove('hidden');
+controls.autoRotate = false;
+
+const colorStr = '#' + activeCarData.color.toString(16).padStart(6, '0');
+letterTitle.textContent = activeCarData.letterTitle;
+letterBody.textContent = activeCarData.letterBody;
+letterCard.style.borderColor = colorStr;
+letterCard.style.boxShadow = `0 0 80px ${colorStr}, 0 0 140px ${colorStr}80`;
+letterTitle.style.color = colorStr;
+letterTitle.style.textShadow = `0 0 20px ${colorStr}`;
+
+setTimeout(() => initModelViewer(carId), 100);
 }
 
 function initModelViewer(carId) {
-  if (viewerAnimId) cancelAnimationFrame(viewerAnimId);
-  if (viewerRenderer) {
-    viewerRenderer.dispose();
-    modelViewerEl.querySelectorAll('canvas').forEach(c => c.remove());
-  }
-  viewerModel = null;
-  const width = modelViewerEl.clientWidth;
-  const height = modelViewerEl.clientHeight;
-  viewerRenderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-  viewerRenderer.setSize(width, height);
-  viewerRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  viewerRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-  viewerRenderer.toneMappingExposure = 1.3;
-  viewerRenderer.shadowMap.enabled = true;
-  modelViewerEl.appendChild(viewerRenderer.domElement);
+if (viewerAnimId) cancelAnimationFrame(viewerAnimId);
+if (viewerRenderer) {
+viewerRenderer.dispose();
+modelViewerEl.querySelectorAll('canvas').forEach(c => c.remove());
+}
+viewerModel = null;
 
-  viewerScene = new THREE.Scene();
-  viewerScene.add(new THREE.AmbientLight(0xffffff, 1.2));
-  viewerScene.add(new THREE.HemisphereLight(0x00c8ff, 0xff7700, 1.0));
-  const key = new THREE.DirectionalLight(0xffffff, 2.0);
-  key.position.set(5, 10, 7);
-  key.castShadow = true;
-  viewerScene.add(key);
-  const cached = modelCache[carId];
-  const color = cached.carData.color;
-  const rim = new THREE.DirectionalLight(color, 2.0);
-  rim.position.set(-6, 4, -6);
-  viewerScene.add(rim);
-  const fill = new THREE.DirectionalLight(0xffffff, 0.8);
-  fill.position.set(0, -3, 5);
-  viewerScene.add(fill);
+const width = modelViewerEl.clientWidth;
+const height = modelViewerEl.clientHeight;
 
-  const modelClone = cached.scene.clone(true);
-  modelClone.rotation.y = cached.rotationY;
-  viewerScene.add(modelClone);
-  viewerModel = modelClone;
+viewerRenderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+viewerRenderer.setSize(width, height);
+viewerRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+viewerRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+viewerRenderer.toneMappingExposure = 1.3;
+viewerRenderer.shadowMap.enabled = true;
+modelViewerEl.appendChild(viewerRenderer.domElement);
 
-  const box = new THREE.Box3().setFromObject(modelClone);
-  const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-  const maxDim = Math.max(size.x, size.y, size.z);
-  const cam = new THREE.PerspectiveCamera(35, width/height, 0.1, 100);
-  const dist = maxDim * 2.0;
-  cam.position.set(center.x + dist * 0.7, center.y + dist * 0.45, center.z + dist * 0.85);
-  cam.lookAt(center.x, center.y, center.z);
-  viewerCamera = cam;
+viewerScene = new THREE.Scene();
+viewerScene.add(new THREE.AmbientLight(0xffffff, 1.2));
+viewerScene.add(new THREE.HemisphereLight(0x00c8ff, 0xff7700, 1.0));
 
-  const groundGeo = new THREE.CircleGeometry(maxDim * 2, 32);
-  const groundMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.4, metalness: 0.8, transparent: true, opacity: 0.4 });
-  const groundPlane = new THREE.Mesh(groundGeo, groundMat);
-  groundPlane.rotation.x = -Math.PI / 2;
-  groundPlane.position.y = box.min.y - 0.01;
-  viewerScene.add(groundPlane);
+const key = new THREE.DirectionalLight(0xffffff, 2.0);
+key.position.set(5, 10, 7);
+key.castShadow = true;
+viewerScene.add(key);
 
-  const startTime = performance.now();
-  function animateViewer() {
-    viewerAnimId = requestAnimationFrame(animateViewer);
-    const t = (performance.now() - startTime) / 1000;
-    if (viewerModel) {
-      viewerModel.rotation.y = cached.rotationY + t * 0.6;
-      viewerModel.position.y = Math.sin(t * 1.5) * 0.05;
-    }
-    viewerRenderer.render(viewerScene, viewerCamera);
-  }
-  animateViewer();
+const cached = modelCache[carId];
+const color = cached.carData.color;
+const rim = new THREE.DirectionalLight(color, 2.0);
+rim.position.set(-6, 4, -6);
+viewerScene.add(rim);
+
+const fill = new THREE.DirectionalLight(0xffffff, 0.8);
+fill.position.set(0, -3, 5);
+viewerScene.add(fill);
+
+const modelClone = cached.scene.clone(true);
+modelClone.rotation.y = cached.rotationY;
+viewerScene.add(modelClone);
+viewerModel = modelClone;
+
+const box = new THREE.Box3().setFromObject(modelClone);
+const size = box.getSize(new THREE.Vector3());
+const center = box.getCenter(new THREE.Vector3());
+const maxDim = Math.max(size.x, size.y, size.z);
+
+const cam = new THREE.PerspectiveCamera(35, width/height, 0.1, 100);
+const dist = maxDim * 2.0;
+cam.position.set(center.x + dist * 0.7, center.y + dist * 0.45, center.z + dist * 0.85);
+cam.lookAt(center.x, center.y, center.z);
+viewerCamera = cam;
+
+const groundGeo = new THREE.CircleGeometry(maxDim * 2, 32);
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.4, metalness: 0.8, transparent: true, opacity: 0.4 });
+const groundPlane = new THREE.Mesh(groundGeo, groundMat);
+groundPlane.rotation.x = -Math.PI / 2;
+groundPlane.position.y = box.min.y - 0.01;
+viewerScene.add(groundPlane);
+
+const startTime = performance.now();
+
+function animateViewer() {
+viewerAnimId = requestAnimationFrame(animateViewer);
+const t = (performance.now() - startTime) / 1000;
+if (viewerModel) {
+viewerModel.rotation.y = cached.rotationY + t * 0.6;
+viewerModel.position.y = Math.sin(t * 1.5) * 0.05;
+}
+viewerRenderer.render(viewerScene, viewerCamera);
+}
+animateViewer();
 }
 
 function closeModelViewer() {
-  if (viewerAnimId) cancelAnimationFrame(viewerAnimId);
-  if (viewerRenderer) {
-    viewerRenderer.dispose();
-    modelViewerEl.querySelectorAll('canvas').forEach(c => c.remove());
-  }
-  viewerRenderer = null; viewerScene = null; viewerCamera = null; viewerModel = null;
+if (viewerAnimId) cancelAnimationFrame(viewerAnimId);
+if (viewerRenderer) {
+viewerRenderer.dispose();
+modelViewerEl.querySelectorAll('canvas').forEach(c => c.remove());
+}
+viewerRenderer = null; viewerScene = null; viewerCamera = null; viewerModel = null;
 }
 
 // ============ SPARKS ============
+
 const sparkPool = [];
 const sparkGeometry = new THREE.SphereGeometry(0.12, 6, 6);
+
 for (let i = 0; i < 220; i++) {
-  const mat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0 });
-  const spark = new THREE.Mesh(sparkGeometry, mat);
-  spark.visible = false;
-  spark.frustumCulled = false;
-  spark.userData = { life:0, vel:new THREE.Vector3() };
-  scene.add(spark);
-  sparkPool.push(spark);
+const mat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0 });
+const spark = new THREE.Mesh(sparkGeometry, mat);
+spark.visible = false;
+spark.frustumCulled = false;
+spark.userData = { life:0, vel:new THREE.Vector3() };
+scene.add(spark);
+sparkPool.push(spark);
 }
+
 let sparkIndex = 0;
+
 function emitSpark(pos, colorHint) {
-  const spark = sparkPool[sparkIndex];
-  sparkIndex = (sparkIndex + 1) % sparkPool.length;
-  spark.position.copy(pos);
-  if (colorHint === 'cyan') spark.material.color.setHex(0x00e0ff);
-  else spark.material.color.setHex(Math.random() > 0.5 ? 0xffaa00 : 0xff5500);
-  spark.material.opacity = 1;
-  spark.visible = true;
-  spark.userData.life = 0.45;
-  spark.userData.vel.set((Math.random()-0.5)*0.5, Math.random()*0.35 + 0.05, (Math.random()-0.5)*0.5);
-  spark.scale.setScalar(1 + Math.random()*1.8);
+const spark = sparkPool[sparkIndex];
+sparkIndex = (sparkIndex + 1) % sparkPool.length;
+spark.position.copy(pos);
+if (colorHint === 'cyan') spark.material.color.setHex(0x00e0ff);
+else spark.material.color.setHex(Math.random() > 0.5 ? 0xffaa00 : 0xff5500);
+spark.material.opacity = 1;
+spark.visible = true;
+spark.userData.life = 0.45;
+spark.userData.vel.set((Math.random()-0.5)*0.5, Math.random()*0.35 + 0.05, (Math.random()-0.5)*0.5);
+spark.scale.setScalar(1 + Math.random()*1.8);
 }
 
 // ============ DOM REFS ============
+
 function initDOMRefs() {
-  phase1 = document.getElementById('phase1');
-  phase2 = document.getElementById('phase2');
-  phase3 = document.getElementById('phase3');
-  phase4 = document.getElementById('phase4');
-  startBtn = document.getElementById('startBtn');
-  raceSubtitle = document.getElementById('raceSubtitle');
-  raceProgress = document.getElementById('raceProgress');
-  hudSpeed = document.getElementById('hudSpeed');
-  hudLap = document.getElementById('hudLap');
-  letterTitle = document.getElementById('letterTitle');
-  letterBody = document.getElementById('letterBody');
-  letterCard = document.getElementById('letterCard');
-  repeatBtn = document.getElementById('repeatBtn');
-  garageBtn = document.getElementById('garageBtn');
-  speedFlash = document.getElementById('speedFlash');
-  skipBtn = document.getElementById('skipBtn');
-  speedLinesBg = document.getElementById('speedLinesBg');
-  modelViewerEl = document.getElementById('modelViewer');
-  loaderEl = document.getElementById('loader');
-  loadProgressEl = document.getElementById('loadProgress');
-  loadTextEl = document.getElementById('loadText');
-  sceneContainerEl = document.getElementById('scene-container');
-  warpOverlay = document.getElementById('warpOverlay');
-  warpRays = document.getElementById('warpRays');
-  bgMusic = document.getElementById('bgMusic');
-  muteBtn = document.getElementById('muteBtn');
+phase1 = document.getElementById('phase1');
+phase2 = document.getElementById('phase2');
+phase3 = document.getElementById('phase3');
+phase4 = document.getElementById('phase4');
+startBtn = document.getElementById('startBtn');
+raceSubtitle = document.getElementById('raceSubtitle');
+raceProgress = document.getElementById('raceProgress');
+hudSpeed = document.getElementById('hudSpeed');
+hudLap = document.getElementById('hudLap');
+letterTitle = document.getElementById('letterTitle');
+letterBody = document.getElementById('letterBody');
+letterCard = document.getElementById('letterCard');
+repeatBtn = document.getElementById('repeatBtn');
+garageBtn = document.getElementById('garageBtn');
+speedFlash = document.getElementById('speedFlash');
+skipBtn = document.getElementById('skipBtn');
+speedLinesBg = document.getElementById('speedLinesBg');
+modelViewerEl = document.getElementById('modelViewer');
+loaderEl = document.getElementById('loader');
+loadProgressEl = document.getElementById('loadProgress');
+loadTextEl = document.getElementById('loadText');
+sceneContainerEl = document.getElementById('scene-container');
+warpOverlay = document.getElementById('warpOverlay');
+warpRays = document.getElementById('warpRays');
+
+// Personalización
+customizeFab = document.getElementById('customizeFab');
+customizeModal = document.getElementById('customizeModal');
+customCarSelect = document.getElementById('customCarSelect');
+customTitle = document.getElementById('customTitle');
+customBody = document.getElementById('customBody');
+phraseEditorGroup = document.getElementById('phraseEditorGroup');
+generateLinkBtn = document.getElementById('generateLinkBtn');
+resetCustomBtn = document.getElementById('resetCustomBtn');
+closeCustomBtn = document.getElementById('closeCustomBtn');
+linkResult = document.getElementById('linkResult');
+linkUrlBox = document.getElementById('linkUrlBox');
+copyLinkBtn = document.getElementById('copyLinkBtn');
+shareWaBtn = document.getElementById('shareWaBtn');
+customBanner = document.getElementById('customBanner');
+bodyCount = document.getElementById('bodyCount');
+
+// Música
+bgMusic = document.getElementById('bgMusic');
+musicFab = document.getElementById('musicFab');
+musicVolumeSlider = document.getElementById('musicVolumeSlider');
+musicVolumeRange = document.getElementById('musicVolumeRange');
+volValue = document.getElementById('volValue');
 }
+
 initDOMRefs();
 sceneContainerEl.classList.add('hidden-until-start');
 
-// Botón de mute
-if (muteBtn) {
-  muteBtn.addEventListener('click', toggleMute);
-}
-
 // ============ FUNCIONES DE CARRERA ============
+
 function removeActiveCar() {
-  if (activeCar) { scene.remove(activeCar.group); activeCar = null; }
-  rainGroup.visible = false;
-  carKeyLight.visible = false;
-  carRimLight.visible = false;
-  carWarmLight.visible = false;
-  scene.fog = new THREE.FogExp2(0x03030a, 0.0065);
+if (activeCar) { scene.remove(activeCar.group); activeCar = null; }
+rainGroup.visible = false;
+carKeyLight.visible = false;
+carRimLight.visible = false;
+carWarmLight.visible = false;
+carSpotGlow.material.opacity = 0;
+scene.fog = new THREE.FogExp2(0x03030a, 0.0065);
 }
 
 function cloneModelForScene(cached) {
-  const clonedScene = cached.scene.clone(true);
-  clonedScene.rotation.y = cached.rotationY;
-  return clonedScene;
+const clonedScene = cached.scene.clone(true);
+clonedScene.rotation.y = cached.rotationY;
+return clonedScene;
 }
 
 function startRace(carId) {
-  if (!modelCache[carId]) return;
-  activeCarType = carId;
-  activeCarData = modelCache[carId].carData;
-  carProgress = 0;
-  currentSpeed = 0;
-  raceActive = true;
-  raceFinished = false;
-  const phrases = activeCarData.phrases;
-  const numPhrases = phrases.length;
-  phraseTriggerProgress = phrases.map((_, i) => 0.08 + (i / numPhrases) * 0.80);
-  phraseShown = new Array(numPhrases).fill(false);
-  phraseTimer = 0;
-  phraseActive = false;
-  raceSubtitle.classList.remove('visible');
-  raceSubtitle.textContent = '';
+if (!modelCache[carId]) return;
 
-  removeActiveCar();
-  const cached = modelCache[carId];
-  const carGroup = new THREE.Group();
-  const modelClone = cloneModelForScene(cached);
-  carGroup.add(modelClone);
-  const wheels = [];
-  modelClone.traverse(child => {
-    if (child.isMesh) {
-      const name = (child.name || '').toLowerCase();
-      if (name.includes('wheel') || name.includes('rueda') || name.includes('tire') || name.includes('llanta')) {
-        wheels.push(child);
-      }
-    }
-  });
-  activeCar = { group: carGroup, wheels };
-  scene.add(carGroup);
-  carGroup.position.set(0, 0.1, 0);
-  carGroup.rotation.set(0, 0, 0);
+if (customizeFab) customizeFab.classList.add('hidden');
 
-  scene.fog = null;
+activeCarType = carId;
+activeCarData = modelCache[carId].carData;
+carProgress = 0;
+currentSpeed = 0;
+raceActive = true;
+raceFinished = false;
 
-  rainGroup.visible = true;
-  carKeyLight.visible = true;
-  carRimLight.visible = true;
-  carWarmLight.visible = true;
+const phrases = activeCarData.phrases;
+const numPhrases = phrases.length;
+phraseTriggerProgress = phrases.map((_, i) => 0.08 + (i / numPhrases) * 0.80);
+phraseShown = new Array(numPhrases).fill(false);
+phraseTimer = 0;
+phraseActive = false;
+raceSubtitle.classList.remove('visible');
+raceSubtitle.textContent = '';
 
-  const rp = rainGeo.attributes.position.array;
-  for (let i = 0; i < RAIN_COUNT; i++) {
-    rp[i*3]   = (Math.random() - 0.5) * RAIN_AREA_X;
-    rp[i*3+1] = Math.random() * RAIN_AREA_Y;
-    rp[i*3+2] = (Math.random() - 0.5) * RAIN_AREA_Z;
-  }
-  rainGeo.attributes.position.needsUpdate = true;
+removeActiveCar();
 
-  const sp = rainStreakGeo.attributes.position.array;
-  for (let i = 0; i < rainStreakCount; i++) {
-    const s = streakData[i];
-    const x = (Math.random() - 0.5) * RAIN_AREA_X;
-    const y = Math.random() * RAIN_AREA_Y;
-    const z = (Math.random() - 0.5) * RAIN_AREA_Z;
-    sp[i*6] = x; sp[i*6+1] = y; sp[i*6+2] = z;
-    sp[i*6+3] = x; sp[i*6+4] = y - s.len; sp[i*6+5] = z;
-  }
-  rainStreakGeo.attributes.position.needsUpdate = true;
+const cached = modelCache[carId];
+const carGroup = new THREE.Group();
+const modelClone = cloneModelForScene(cached);
+carGroup.add(modelClone);
 
-  rainGroup.position.copy(carGroup.position);
+const wheels = [];
+modelClone.traverse(child => {
+if (child.isMesh) {
+const name = (child.name || '').toLowerCase();
+if (name.includes('wheel') || name.includes('rueda') || name.includes('tire') || name.includes('llanta')) {
+wheels.push(child);
+}
+}
+});
 
-  phase1.classList.add('hidden');
-  phase2.classList.add('hidden');
-  phase4.classList.add('hidden');
-  closeModelViewer();
-  phase3.classList.remove('hidden');
-  speedLinesBg.classList.remove('active');
-  controls.enabled = false;
-  controls.autoRotate = false;
-  skipBtn.classList.add('show');
-  hudSpeed.textContent = '0 KM/H';
-  speedFlash.classList.add('active');
-  setTimeout(() => speedFlash.classList.remove('active'), 500);
-  playEngine();
+activeCar = { group: carGroup, wheels };
+scene.add(carGroup);
+carGroup.position.set(0, 0.1, 0);
+carGroup.rotation.set(0, 0, 0);
+
+scene.fog = null;
+
+rainGroup.visible = true;
+carKeyLight.visible = true;
+carRimLight.visible = true;
+carWarmLight.visible = true;
+
+const carZ = carGroup.position.z;
+const rp = rainGeo.attributes.position.array;
+for (let i = 0; i < RAIN_COUNT; i++) {
+rp[i*3] = carGroup.position.x + (Math.random() - 0.5) * RAIN_AREA_X;
+rp[i*3+1] = carGroup.position.y + Math.random() * RAIN_AREA_Y;
+rp[i*3+2] = carZ + (Math.random() - 0.5) * RAIN_AREA_Z;
+}
+rainGeo.attributes.position.needsUpdate = true;
+
+const sp = rainStreakGeo.attributes.position.array;
+for (let i = 0; i < rainStreakCount; i++) {
+const s = streakData[i];
+const x = carGroup.position.x + (Math.random() - 0.5) * RAIN_AREA_X;
+const y = carGroup.position.y + Math.random() * RAIN_AREA_Y;
+const z = carZ + (Math.random() - 0.5) * RAIN_AREA_Z;
+sp[i*6] = x; sp[i*6+1] = y; sp[i*6+2] = z;
+sp[i*6+3] = x; sp[i*6+4] = y - s.len; sp[i*6+5] = z;
+}
+rainStreakGeo.attributes.position.needsUpdate = true;
+
+phase1.classList.add('hidden');
+phase2.classList.add('hidden');
+phase4.classList.add('hidden');
+closeModelViewer();
+phase3.classList.remove('hidden');
+speedLinesBg.classList.remove('active');
+controls.enabled = false;
+controls.autoRotate = false;
+skipBtn.classList.add('show');
+hudSpeed.textContent = '0 KM/H';
+speedFlash.classList.add('active');
+setTimeout(() => speedFlash.classList.remove('active'), 500);
+playEngine();
 }
 
 function finishRace() {
-  raceActive = false;
-  raceFinished = true;
-  playScreech();
-  skipBtn.classList.remove('show');
-  raceSubtitle.textContent = '🏁 ¡META! 🏁';
-  raceSubtitle.classList.add('visible');
-  raceSubtitle.style.color = '#ffcc00';
-  raceSubtitle.style.textShadow = '0 0 40px #ffaa00, 0 0 80px #ff4500';
-  setTimeout(() => {
-    phase3.classList.add('hidden');
-    phase4.classList.remove('hidden');
-    const colorStr = '#' + activeCarData.color.toString(16).padStart(6, '0');
-    letterTitle.textContent = activeCarData.letterTitle;
-    letterBody.textContent = activeCarData.letterBody;
-    letterCard.style.borderColor = colorStr;
-    letterCard.style.boxShadow = `0 0 80px ${colorStr}, 0 0 140px ${colorStr}80`;
-    letterTitle.style.color = colorStr;
-    letterTitle.style.textShadow = `0 0 20px ${colorStr}`;
-    setTimeout(() => initModelViewer(activeCarType), 200);
-  }, 2000);
+raceActive = false;
+raceFinished = true;
+playScreech();
+skipBtn.classList.remove('show');
+raceSubtitle.textContent = '🏁 ¡META! 🏁';
+raceSubtitle.classList.add('visible');
+raceSubtitle.style.color = '#ffcc00';
+raceSubtitle.style.textShadow = '0 0 40px #ffaa00, 0 0 80px #ff4500';
+
+setTimeout(() => {
+phase3.classList.add('hidden');
+phase4.classList.remove('hidden');
+const colorStr = '#' + activeCarData.color.toString(16).padStart(6, '0');
+letterTitle.textContent = activeCarData.letterTitle;
+letterBody.textContent = activeCarData.letterBody;
+letterCard.style.borderColor = colorStr;
+letterCard.style.boxShadow = `0 0 80px ${colorStr}, 0 0 140px ${colorStr}80`;
+letterTitle.style.color = colorStr;
+letterTitle.style.textShadow = `0 0 20px ${colorStr}`;
+setTimeout(() => initModelViewer(activeCarType), 200);
+}, 2000);
 }
 
 function showPhrase(idx) {
-  const phrases = activeCarData.phrases;
-  if (idx >= phrases.length) return;
-  phraseActive = true;
-  phraseTimer = PHRASE_DURATION;
-  raceSubtitle.textContent = phrases[idx];
-  const colorStr = '#' + activeCarData.color.toString(16).padStart(6, '0');
-  raceSubtitle.style.color = '#fff';
-  raceSubtitle.style.textShadow = `0 0 30px ${colorStr}, 0 0 60px ${colorStr}`;
-  raceSubtitle.style.borderLeftColor = colorStr;
-  raceSubtitle.style.borderRightColor = colorStr;
-  raceSubtitle.classList.add('visible');
-  raceSubtitle.style.animation = 'none';
-  raceSubtitle.offsetHeight;
-  raceSubtitle.style.animation = 'subtitlePop 0.5s ease-out';
-  playBlip();
+const phrases = activeCarData.phrases;
+if (idx >= phrases.length) return;
+phraseActive = true;
+phraseTimer = PHRASE_DURATION;
+raceSubtitle.textContent = phrases[idx];
+const colorStr = '#' + activeCarData.color.toString(16).padStart(6, '0');
+raceSubtitle.style.color = '#fff';
+raceSubtitle.style.textShadow = `0 0 30px ${colorStr}, 0 0 60px ${colorStr}`;
+raceSubtitle.style.borderLeftColor = colorStr;
+raceSubtitle.style.borderRightColor = colorStr;
+raceSubtitle.classList.add('visible');
+raceSubtitle.style.animation = 'none';
+raceSubtitle.offsetHeight;
+raceSubtitle.style.animation = 'subtitlePop 0.5s ease-out';
+playBlip();
 }
 
 // ============ ANIMACIÓN ============
+
 const clock = new THREE.Clock();
 let galaxyTime = 0;
 
 function animate() {
-  requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), 0.05);
-  const time = clock.elapsedTime;
-  galaxyTime += dt;
+requestAnimationFrame(animate);
+const dt = Math.min(clock.getDelta(), 0.05);
+const time = clock.elapsedTime;
+galaxyTime += dt;
 
-  if (!phase2) { composer.render(); return; }
+if (!phase2) { composer.render(); return; }
 
-  neonLights.forEach((l, i) => {
-    l.position.set(
-      Math.sin(time * 0.8 + i) * 30,
-      3 + Math.sin(time * 2 + i) * 1.5,
-      -carProgress * TRACK_LENGTH + Math.cos(time * 0.6 + i) * 20
-    );
-    l.intensity = 2 + Math.sin(time * 5 + i) * 1.5;
-  });
+neonLights.forEach((l, i) => {
+l.position.set(
+Math.sin(time * 0.8 + i) * 30,
+3 + Math.sin(time * 2 + i) * 1.5,
+-carProgress * TRACK_LENGTH + Math.cos(time * 0.6 + i) * 20
+);
+l.intensity = 2 + Math.sin(time * 5 + i) * 1.5;
+});
 
-  galaxyCore.rotation.y += dt * 0.15;
-  spiralParticles.rotation.y += dt * 0.05;
-  ring1.rotation.z += dt * 0.4;
-  ring2.rotation.z -= dt * 0.3;
-  ring3.rotation.z += dt * 0.2;
-  coreGlow.material.opacity = 0.7 + Math.sin(time * 2) * 0.2;
-  starField.rotation.y += dt * 0.01;
+galaxyCore.rotation.y += dt * 0.15;
+spiralParticles.rotation.y += dt * 0.05;
+ring1.rotation.z += dt * 0.4;
+ring2.rotation.z -= dt * 0.3;
+ring3.rotation.z += dt * 0.2;
+coreGlow.material.opacity = 0.7 + Math.sin(time * 2) * 0.2;
+starField.rotation.y += dt * 0.01;
 
-  const dustArr = dustGeo.attributes.position.array;
-  for (let i = 0; i < dustCount; i++) {
-    const d = dustData[i];
-    d.angle += d.speed * dt;
-    dustArr[i*3] = Math.cos(d.angle) * d.radius;
-    dustArr[i*3+1] = d.baseY + Math.sin(time * 1.5 + i) * 0.3;
-    dustArr[i*3+2] = Math.sin(d.angle) * d.radius;
-  }
-  dustGeo.attributes.position.needsUpdate = true;
-
-  twinkleMat.size = 0.32 + Math.sin(time * 3) * 0.08;
-  twinkleStars.rotation.y += dt * 0.03;
-
-  rayData.forEach((line) => {
-    const ud = line.userData;
-    ud.baseTheta += ud.orbitSpeed * dt;
-    const r = ud.baseRadius;
-    const phi = ud.basePhi;
-    line.position.set(r * Math.sin(phi) * Math.cos(ud.baseTheta), r * Math.cos(phi) * 0.6, r * Math.sin(phi) * Math.sin(ud.baseTheta));
-    line.lookAt(0, 0, 0);
-    line.material.opacity = ud.baseOpacity * (0.5 + Math.abs(Math.sin(time * ud.flashSpeed + ud.flashPhase)) * 0.5);
-  });
-
-  emojiSprites.forEach((s) => {
-    const ud = s.userData;
-    ud.baseAngle += ud.orbitSpeed * dt;
-    s.position.x = Math.cos(ud.baseAngle) * ud.baseR;
-    s.position.z = Math.sin(ud.baseAngle) * ud.baseR;
-    s.position.y = ud.baseY + Math.sin(time * ud.floatSpeed + ud.floatPhase) * ud.floatAmp;
-    s.material.rotation += dt * ud.rotSpeed;
-    const twinkle = 0.6 + Math.abs(Math.sin(time * ud.twinkleSpeed + ud.twinklePhase)) * 0.4;
-    s.material.opacity = ud.baseOpacity * twinkle;
-    const sScale = ud.scaleBase * (1 + Math.sin(time * ud.scaleSpeed + ud.scalePhase) * ud.scaleAmp);
-    s.scale.set(sScale, sScale, 1);
-  });
-
-  if (!phase2.classList.contains('hidden')) {
-    galaxyGroup.children.forEach((sprite) => {
-      const ud = sprite.userData;
-      if (!ud || ud.isGlow) return;
-      ud.baseAngle += ud.orbitSpeed * dt;
-      const r = ud.baseRadius;
-      sprite.position.x = Math.cos(ud.baseAngle) * r;
-      sprite.position.z = Math.sin(ud.baseAngle) * r;
-      sprite.position.y = ud.baseY + Math.sin(galaxyTime * ud.floatSpeed + ud.floatPhase) * ud.floatAmp;
-      if (sprite.material) {
-        sprite.material.rotation = Math.sin(galaxyTime * 0.8 + ud.floatPhase) * 0.15;
-      }
-    });
-  }
-
-  // 🌧️ LLUVIA ESPACIAL
-  if (rainGroup.visible && activeCar) {
-    rainGroup.position.copy(activeCar.group.position);
-
-    const rp = rainGeo.attributes.position.array;
-    const halfX = RAIN_AREA_X * 0.5;
-    const halfZ = RAIN_AREA_Z * 0.5;
-
-    for (let i = 0; i < RAIN_COUNT; i++) {
-      const v = rainVelocities[i];
-      rp[i*3] += v.x * dt;
-      rp[i*3+1] -= v.y * dt;
-      rp[i*3+2] += v.z * dt;
-
-      const tooFar = Math.abs(rp[i*3]) > halfX ||
-                     Math.abs(rp[i*3+2]) > halfZ ||
-                     rp[i*3+1] < -10;
-
-      if (tooFar) {
-        rp[i*3]   = (Math.random() - 0.5) * RAIN_AREA_X;
-        rp[i*3+1] = RAIN_AREA_Y * (0.5 + Math.random() * 0.5);
-        rp[i*3+2] = (Math.random() - 0.5) * RAIN_AREA_Z;
-      }
-    }
-    rainGeo.attributes.position.needsUpdate = true;
-
-    const sp = rainStreakGeo.attributes.position.array;
-    for (let i = 0; i < rainStreakCount; i++) {
-      const s = streakData[i];
-      sp[i*6+1] -= s.speed * dt;
-      sp[i*6+4] = sp[i*6+1] - s.len;
-
-      const tooFarS = Math.abs(sp[i*6]) > halfX ||
-                      Math.abs(sp[i*6+2]) > halfZ ||
-                      sp[i*6+1] < -10;
-
-      if (tooFarS) {
-        const nx = (Math.random() - 0.5) * RAIN_AREA_X;
-        const nz = (Math.random() - 0.5) * RAIN_AREA_Z;
-        const ny = RAIN_AREA_Y * (0.5 + Math.random() * 0.5);
-        sp[i*6]   = nx; sp[i*6+1] = ny; sp[i*6+2] = nz;
-        sp[i*6+3] = nx; sp[i*6+4] = ny - s.len; sp[i*6+5] = nz;
-      }
-    }
-    rainStreakGeo.attributes.position.needsUpdate = true;
-
-    rainMat.opacity = 0.85 + Math.sin(time * 8) * 0.15 + (Math.random() > 0.985 ? 0.15 : 0);
-
-    const cp = activeCar.group.position;
-    carKeyLight.position.set(cp.x + 3, cp.y + 6, cp.z + 4);
-    carKeyLight.intensity = 2.5;
-    carRimLight.position.set(cp.x - 4, cp.y + 2, cp.z - 3);
-    carRimLight.intensity = 2.0;
-    carWarmLight.position.set(cp.x + 3, cp.y + 1, cp.z - 4);
-    carWarmLight.intensity = 1.5;
-  }
-
-  if (activeCar && raceActive) {
-    if (!phraseActive) {
-      currentSpeed += (TARGET_SPEED - currentSpeed) * 0.4 * dt;
-    } else {
-      currentSpeed += (TARGET_SPEED * 0.35 - currentSpeed) * 0.8 * dt;
-    }
-    carProgress += currentSpeed * dt;
-    if (carProgress >= 1) {
-      carProgress = 1;
-      if (!raceFinished) finishRace();
-    }
-    if (phraseActive) {
-      phraseTimer -= dt;
-      if (phraseTimer <= 0) {
-        phraseActive = false;
-        raceSubtitle.classList.remove('visible');
-      }
-    }
-    if (!phraseActive && !raceFinished) {
-      for (let i = 0; i < phraseTriggerProgress.length; i++) {
-        if (!phraseShown[i] && carProgress >= phraseTriggerProgress[i]) {
-          phraseShown[i] = true;
-          showPhrase(i);
-          break;
-        }
-      }
-    }
-    const bump = Math.sin(carProgress * 80) * 0.05;
-    activeCar.group.position.x = 0;
-    activeCar.group.position.y = 0.1 + bump + Math.sin(time * 55) * 0.015;
-    activeCar.group.position.z = -carProgress * TRACK_LENGTH;
-    activeCar.group.rotation.set(0, 0, 0);
-    activeCar.wheels.forEach(w => { w.rotation.x += dt * 15; });
-
-    if (Math.random() < 0.45) {
-      const backOffset = new THREE.Vector3(0, 0.3, 2.4).applyQuaternion(activeCar.group.quaternion);
-      const sparkPos = activeCar.group.position.clone().add(backOffset);
-      sparkPos.y += Math.random() * 0.4;
-      emitSpark(sparkPos, Math.random() > 0.7 ? 'cyan' : null);
-    }
-    raceProgress.style.width = (carProgress * 100) + '%';
-    const displaySpeed = Math.round(currentSpeed * 24 * 320);
-    hudSpeed.textContent = displaySpeed + ' KM/H';
-  } else if (activeCar && raceFinished) {
-    activeCar.group.position.y = 0.1 + Math.sin(time * 20) * 0.03;
-    activeCar.group.rotation.y += dt * 0.8;
-    activeCar.wheels.forEach(w => { w.rotation.x += dt * 8; });
-    hudSpeed.textContent = '0 KM/H';
-
-    const cp = activeCar.group.position;
-    carKeyLight.position.set(cp.x + 3, cp.y + 6, cp.z + 4);
-    carKeyLight.intensity = 3.0;
-    carRimLight.position.set(cp.x - 4, cp.y + 2, cp.z - 3);
-    carRimLight.intensity = 3.0;
-    carWarmLight.position.set(cp.x + 3, cp.y + 1, cp.z - 4);
-    carWarmLight.intensity = 2.0;
-  }
-
-  if (activeCar && phase3 && !phase3.classList.contains('hidden')) {
-    const carPos = activeCar.group.position;
-    const desiredCamPos = new THREE.Vector3(carPos.x, carPos.y + 5, carPos.z + 10);
-    const camLerp = 1 - Math.pow(0.001, dt);
-    camera.position.lerp(desiredCamPos, camLerp);
-    const desiredLook = new THREE.Vector3(carPos.x, carPos.y + 0.8, carPos.z - 8);
-    camera.lookAt(desiredLook);
-    const targetFov = 65 + (currentSpeed / TARGET_SPEED) * 8;
-    camera.fov += (targetFov - camera.fov) * 0.05;
-    camera.updateProjectionMatrix();
-  }
-
-  sparkPool.forEach(spark => {
-    if (spark.visible) {
-      spark.userData.life -= dt;
-      if (spark.userData.life <= 0) {
-        spark.visible = false;
-        spark.material.opacity = 0;
-      } else {
-        spark.material.opacity = Math.max(0, spark.userData.life / 0.45);
-        spark.position.add(spark.userData.vel.clone().multiplyScalar(dt * 60));
-        spark.userData.vel.y -= dt * 1.5;
-        const s = spark.userData.life * 1.2;
-        spark.scale.setScalar(Math.max(0.15, s));
-      }
-    }
-  });
-
-  bloom.strength = raceActive ? 0.75 : 1.0;
-
-  // 🎵 Volumen dinámico de la música
-  updateMusicVolume();
-
-  if (controls.enabled) controls.update();
-  composer.render();
+const dustArr = dustGeo.attributes.position.array;
+for (let i = 0; i < dustCount; i++) {
+const d = dustData[i];
+d.angle += d.speed * dt;
+dustArr[i*3] = Math.cos(d.angle) * d.radius;
+dustArr[i*3+1] = d.baseY + Math.sin(time * 1.5 + i) * 0.3;
+dustArr[i*3+2] = Math.sin(d.angle) * d.radius;
 }
+dustGeo.attributes.position.needsUpdate = true;
+
+twinkleMat.size = 0.32 + Math.sin(time * 3) * 0.08;
+twinkleStars.rotation.y += dt * 0.03;
+
+rayData.forEach((line) => {
+const ud = line.userData;
+ud.baseTheta += ud.orbitSpeed * dt;
+const r = ud.baseRadius;
+const phi = ud.basePhi;
+line.position.set(r * Math.sin(phi) * Math.cos(ud.baseTheta), r * Math.cos(phi) * 0.6, r * Math.sin(phi) * Math.sin(ud.baseTheta));
+line.lookAt(0, 0, 0);
+line.material.opacity = ud.baseOpacity * (0.5 + Math.abs(Math.sin(time * ud.flashSpeed + ud.flashPhase)) * 0.5);
+});
+
+emojiSprites.forEach((s) => {
+const ud = s.userData;
+ud.baseAngle += ud.orbitSpeed * dt;
+s.position.x = Math.cos(ud.baseAngle) * ud.baseR;
+s.position.z = Math.sin(ud.baseAngle) * ud.baseR;
+s.position.y = ud.baseY + Math.sin(time * ud.floatSpeed + ud.floatPhase) * ud.floatAmp;
+s.material.rotation += dt * ud.rotSpeed;
+const twinkle = 0.6 + Math.abs(Math.sin(time * ud.twinkleSpeed + ud.twinklePhase)) * 0.4;
+s.material.opacity = ud.baseOpacity * twinkle;
+const sScale = ud.scaleBase * (1 + Math.sin(time * ud.scaleSpeed + ud.scalePhase) * ud.scaleAmp);
+s.scale.set(sScale, sScale, 1);
+});
+
+if (!phase2.classList.contains('hidden')) {
+galaxyGroup.children.forEach((sprite) => {
+const ud = sprite.userData;
+if (!ud || ud.isGlow) return;
+ud.baseAngle += ud.orbitSpeed * dt;
+const r = ud.baseRadius;
+sprite.position.x = Math.cos(ud.baseAngle) * r;
+sprite.position.z = Math.sin(ud.baseAngle) * r;
+sprite.position.y = ud.baseY + Math.sin(galaxyTime * ud.floatSpeed + ud.floatPhase) * ud.floatAmp;
+if (sprite.material) {
+sprite.material.rotation = Math.sin(galaxyTime * 0.8 + ud.floatPhase) * 0.15;
+}
+});
+}
+
+if (rainGroup.visible && activeCar) {
+const carPos = activeCar.group.position;
+const rp = rainGeo.attributes.position.array;
+const halfX = RAIN_AREA_X * 0.5;
+const halfZ = RAIN_AREA_Z * 0.5;
+
+for (let i = 0; i < RAIN_COUNT; i++) {
+const v = rainVelocities[i];
+rp[i*3] += v.x * dt;
+rp[i*3+1] -= v.y * dt;
+rp[i*3+2] += v.z * dt;
+const tooFar = Math.abs(rp[i*3] - carPos.x) > halfX ||
+Math.abs(rp[i*3+2] - carPos.z) > halfZ ||
+rp[i*3+1] < carPos.y - 10;
+if (tooFar) {
+rp[i*3] = carPos.x + (Math.random() - 0.5) * RAIN_AREA_X;
+rp[i*3+1] = carPos.y + RAIN_AREA_Y * (0.5 + Math.random() * 0.5);
+rp[i*3+2] = carPos.z + (Math.random() - 0.5) * RAIN_AREA_Z;
+}
+}
+rainGeo.attributes.position.needsUpdate = true;
+
+const sp = rainStreakGeo.attributes.position.array;
+for (let i = 0; i < rainStreakCount; i++) {
+const s = streakData[i];
+sp[i*6+1] -= s.speed * dt;
+sp[i*6+4] = sp[i*6+1] - s.len;
+const tooFarS = Math.abs(sp[i*6] - carPos.x) > halfX ||
+Math.abs(sp[i*6+2] - carPos.z) > halfZ ||
+sp[i*6+1] < carPos.y - 10;
+if (tooFarS) {
+const nx = carPos.x + (Math.random() - 0.5) * RAIN_AREA_X;
+const nz = carPos.z + (Math.random() - 0.5) * RAIN_AREA_Z;
+const ny = carPos.y + RAIN_AREA_Y * (0.5 + Math.random() * 0.5);
+sp[i*6] = nx; sp[i*6+1] = ny; sp[i*6+2] = nz;
+sp[i*6+3] = nx; sp[i*6+4] = ny - s.len; sp[i*6+5] = nz;
+}
+}
+rainStreakGeo.attributes.position.needsUpdate = true;
+
+rainMat.opacity = 0.85 + Math.sin(time * 8) * 0.15 + (Math.random() > 0.985 ? 0.15 : 0);
+
+const cp = activeCar.group.position;
+carKeyLight.position.set(cp.x + 3, cp.y + 6, cp.z + 4);
+carKeyLight.intensity = 2.5;
+carRimLight.position.set(cp.x - 4, cp.y + 2, cp.z - 3);
+carRimLight.intensity = 2.0;
+carWarmLight.position.set(cp.x + 3, cp.y + 1, cp.z - 4);
+carWarmLight.intensity = 1.5;
+carSpotGlow.position.set(cp.x, cp.y + 0.5, cp.z + 2);
+carSpotGlow.material.opacity = 0.3 + Math.sin(time * 4) * 0.08;
+}
+
+if (activeCar && raceActive) {
+if (!phraseActive) {
+currentSpeed += (TARGET_SPEED - currentSpeed) * 0.4 * dt;
+} else {
+currentSpeed += (TARGET_SPEED * 0.35 - currentSpeed) * 0.8 * dt;
+}
+carProgress += currentSpeed * dt;
+if (carProgress >= 1) {
+carProgress = 1;
+if (!raceFinished) finishRace();
+}
+if (phraseActive) {
+phraseTimer -= dt;
+if (phraseTimer <= 0) {
+phraseActive = false;
+raceSubtitle.classList.remove('visible');
+}
+}
+if (!phraseActive && !raceFinished) {
+for (let i = 0; i < phraseTriggerProgress.length; i++) {
+if (!phraseShown[i] && carProgress >= phraseTriggerProgress[i]) {
+phraseShown[i] = true;
+showPhrase(i);
+break;
+}
+}
+}
+const bump = Math.sin(carProgress * 80) * 0.05;
+activeCar.group.position.x = 0;
+activeCar.group.position.y = 0.1 + bump + Math.sin(time * 55) * 0.015;
+activeCar.group.position.z = -carProgress * TRACK_LENGTH;
+activeCar.group.rotation.set(0, 0, 0);
+activeCar.wheels.forEach(w => { w.rotation.x += dt * 15; });
+if (Math.random() < 0.45) {
+const backOffset = new THREE.Vector3(0, 0.3, 2.4).applyQuaternion(activeCar.group.quaternion);
+const sparkPos = activeCar.group.position.clone().add(backOffset);
+sparkPos.y += Math.random() * 0.4;
+emitSpark(sparkPos, Math.random() > 0.7 ? 'cyan' : null);
+}
+raceProgress.style.width = (carProgress * 100) + '%';
+const displaySpeed = Math.round(currentSpeed * 24 * 320);
+hudSpeed.textContent = displaySpeed + ' KM/H';
+} else if (activeCar && raceFinished) {
+activeCar.group.position.y = 0.1 + Math.sin(time * 20) * 0.03;
+activeCar.group.rotation.y += dt * 0.8;
+activeCar.wheels.forEach(w => { w.rotation.x += dt * 8; });
+hudSpeed.textContent = '0 KM/H';
+const cp = activeCar.group.position;
+carKeyLight.position.set(cp.x + 3, cp.y + 6, cp.z + 4);
+carKeyLight.intensity = 2.0;
+carRimLight.position.set(cp.x - 4, cp.y + 2, cp.z - 3);
+carRimLight.intensity = 1.5;
+carWarmLight.position.set(cp.x + 3, cp.y + 1, cp.z - 4);
+carWarmLight.intensity = 1.2;
+carSpotGlow.position.set(cp.x, cp.y + 0.5, cp.z + 2);
+carSpotGlow.material.opacity = 0.22 + Math.sin(time * 3) * 0.06;
+}
+
+if (activeCar && phase3 && !phase3.classList.contains('hidden')) {
+const carPos = activeCar.group.position;
+const desiredCamPos = new THREE.Vector3(carPos.x, carPos.y + 5, carPos.z + 10);
+const camLerp = 1 - Math.pow(0.001, dt);
+camera.position.lerp(desiredCamPos, camLerp);
+const desiredLook = new THREE.Vector3(carPos.x, carPos.y + 0.8, carPos.z - 8);
+camera.lookAt(desiredLook);
+const targetFov = 65 + (currentSpeed / TARGET_SPEED) * 8;
+camera.fov += (targetFov - camera.fov) * 0.05;
+camera.updateProjectionMatrix();
+}
+
+sparkPool.forEach(spark => {
+if (spark.visible) {
+spark.userData.life -= dt;
+if (spark.userData.life <= 0) {
+spark.visible = false;
+spark.material.opacity = 0;
+} else {
+spark.material.opacity = Math.max(0, spark.userData.life / 0.45);
+spark.position.add(spark.userData.vel.clone().multiplyScalar(dt * 60));
+spark.userData.vel.y -= dt * 1.5;
+const s = spark.userData.life * 1.2;
+spark.scale.setScalar(Math.max(0.15, s));
+}
+}
+});
+
+bloom.strength = raceActive ? (0.55 + Math.sin(time * 6) * 0.1) : 1.0;
+if (controls.enabled) controls.update();
+composer.render();
+}
+
 animate();
 
 // ============ INICIAR CARGA ============
+
 totalToLoad = CARS.length;
 Promise.all(CARS.map(car => loadModel(car)))
-  .then(() => {
-    console.log('✅ Todos los modelos cargados:', loadedCount);
-    buildGalaxy();
-    createSpeedLines();
-  })
-  .catch(err => {
-    console.error('❌ Error en carga:', err);
-    if (loaderEl) loaderEl.classList.add('hidden');
-    if (galaxyGroup.children.length === 0) { buildGalaxy(); createSpeedLines(); }
-  });
+.then(() => {
+console.log('✅ Todos los modelos cargados:', loadedCount);
+buildGalaxy();
+createSpeedLines();
+})
+.catch(err => {
+console.error('❌ Error en carga:', err);
+if (loaderEl) loaderEl.classList.add('hidden');
+if (galaxyGroup.children.length === 0) { buildGalaxy(); createSpeedLines(); }
+});
 
 setTimeout(() => {
-  if (loaderEl && !loaderEl.classList.contains('hidden')) {
-    loaderEl.classList.add('hidden');
-    if (galaxyGroup.children.length === 0) { buildGalaxy(); createSpeedLines(); }
-  }
+if (loaderEl && !loaderEl.classList.contains('hidden')) {
+loaderEl.classList.add('hidden');
+if (galaxyGroup.children.length === 0) { buildGalaxy(); createSpeedLines(); }
+}
 }, 15000);
 
 // ============ EVENTOS ============
+
 startBtn.addEventListener('click', () => {
-  initAudio();
-  startMusic();          // 🎵 Empieza la música
-  playWarp();
-  warpOverlay.classList.add('active');
-  warpRays.classList.add('active');
-  speedFlash.classList.add('active');
-  setTimeout(() => speedFlash.classList.remove('active'), 500);
-  phase1.classList.add('hidden');
-  setTimeout(() => {
-    sceneContainerEl.classList.remove('hidden-until-start');
-    phase2.classList.remove('hidden');
-    speedLinesBg.classList.add('active');
-    playEngine();
-    camera.position.set(0, 10, 32);
-    controls.target.set(0, 0, 0);
-    controls.enabled = true;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.4;
-    controls.update();
+initAudio();
+playWarp();
 
-    const t0 = performance.now();
-    const startZ = 60, endZ = 32;
-    const startFov = 40, endFov = 65;
-    function zoomIn() {
-      const t = Math.min((performance.now() - t0) / 1400, 1);
-      const ease = 1 - Math.pow(1 - t, 3);
-      camera.position.z = startZ + (endZ - startZ) * ease;
-      camera.fov = startFov + (endFov - startFov) * ease;
-      camera.updateProjectionMatrix();
-      if (t < 1) requestAnimationFrame(zoomIn);
-    }
-    zoomIn();
-  }, 350);
+// 🎵 Iniciar música de fondo
+if (bgMusic) {
+  bgMusic.volume = (musicVolumeRange ? musicVolumeRange.value : 60) / 100;
+  bgMusic.currentTime = 0;
+  const musicPromise = bgMusic.play();
+  if (musicPromise && musicPromise.catch) {
+    musicPromise.catch(err => console.warn('No se pudo reproducir música:', err));
+  }
+  musicStarted = true;
+  updateMusicFabState();
+}
 
-  setTimeout(() => {
-    warpOverlay.classList.remove('active');
-    warpRays.classList.remove('active');
-  }, 1500);
+warpOverlay.classList.add('active');
+warpRays.classList.add('active');
+speedFlash.classList.add('active');
+setTimeout(() => speedFlash.classList.remove('active'), 500);
+phase1.classList.add('hidden');
+
+setTimeout(() => {
+sceneContainerEl.classList.remove('hidden-until-start');
+phase2.classList.remove('hidden');
+speedLinesBg.classList.add('active');
+playEngine();
+camera.position.set(0, 10, 32);
+controls.target.set(0, 0, 0);
+controls.enabled = true;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.4;
+controls.update();
+
+const t0 = performance.now();
+const startZ = 60, endZ = 32;
+const startFov = 40, endFov = 65;
+
+function zoomIn() {
+const t = Math.min((performance.now() - t0) / 1400, 1);
+const ease = 1 - Math.pow(1 - t, 3);
+camera.position.z = startZ + (endZ - startZ) * ease;
+camera.fov = startFov + (endFov - startFov) * ease;
+camera.updateProjectionMatrix();
+if (t < 1) requestAnimationFrame(zoomIn);
+}
+zoomIn();
+
+updateCustomizeFabVisibility();
+}, 350);
+
+setTimeout(() => {
+warpOverlay.classList.remove('active');
+warpRays.classList.remove('active');
+}, 1500);
 });
 
 repeatBtn.addEventListener('click', () => {
-  speedLinesBg.classList.remove('active');
-  closeModelViewer();
-  startRace(activeCarType);
+speedLinesBg.classList.remove('active');
+closeModelViewer();
+// 🎵 Reanudar música si estaba pausada
+if (bgMusic && bgMusic.paused && musicStarted) {
+  bgMusic.play().catch(() => {});
+}
+startRace(activeCarType);
 });
 
 garageBtn.addEventListener('click', () => {
-  removeActiveCar();
-  closeModelViewer();
-  raceActive = false;
-  raceFinished = false;
-  currentSpeed = 0;
-  phraseActive = false;
-  raceSubtitle.classList.remove('visible');
-  phase4.classList.add('hidden');
-  phase2.classList.remove('hidden');
-  speedLinesBg.classList.add('active');
-  skipBtn.classList.remove('show');
-  scene.fog = new THREE.FogExp2(0x03030a, 0.0065);
-  camera.position.set(0, 10, 32);
-  controls.target.set(0, 0, 0);
-  controls.enabled = true;
-  controls.autoRotate = true;
-  controls.autoRotateSpeed = 0.4;
-  controls.update();
+removeActiveCar();
+closeModelViewer();
+// 🎵 Reanudar música si estaba pausada
+if (bgMusic && bgMusic.paused && musicStarted) {
+  bgMusic.play().catch(() => {});
+}
+raceActive = false;
+raceFinished = false;
+currentSpeed = 0;
+phraseActive = false;
+raceSubtitle.classList.remove('visible');
+phase4.classList.add('hidden');
+phase2.classList.remove('hidden');
+speedLinesBg.classList.add('active');
+skipBtn.classList.remove('show');
+scene.fog = new THREE.FogExp2(0x03030a, 0.0065);
+camera.position.set(0, 10, 32);
+controls.target.set(0, 0, 0);
+controls.enabled = true;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.4;
+controls.update();
+updateCustomizeFabVisibility();
 });
 
 skipBtn.addEventListener('click', () => {
-  if (raceActive) {
-    carProgress = 0.99;
-    phraseActive = false;
-    raceSubtitle.classList.remove('visible');
-  }
+if (raceActive) {
+carProgress = 0.99;
+phraseActive = false;
+raceSubtitle.classList.remove('visible');
+}
 });
 
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
-  if (viewerRenderer && viewerCamera) {
-    const w = modelViewerEl.clientWidth;
-    const h = modelViewerEl.clientHeight;
-    viewerCamera.aspect = w / h;
-    viewerCamera.updateProjectionMatrix();
-    viewerRenderer.setSize(w, h);
+camera.aspect = window.innerWidth / window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth, window.innerHeight);
+composer.setSize(window.innerWidth, window.innerHeight);
+if (viewerRenderer && viewerCamera) {
+const w = modelViewerEl.clientWidth;
+const h = modelViewerEl.clientHeight;
+viewerCamera.aspect = w / h;
+viewerCamera.updateProjectionMatrix();
+viewerRenderer.setSize(w, h);
+}
+});
+
+// ========================================================
+// ⚙️ SISTEMA DE PERSONALIZACIÓN
+// ========================================================
+
+function getCarOriginalState(carId) {
+  return ORIGINAL_CARS_STATE.find(c => c.id === carId);
+}
+
+function populateCarSelect() {
+  if (!customCarSelect) return;
+  customCarSelect.innerHTML = '';
+  CARS.forEach(car => {
+    const opt = document.createElement('option');
+    opt.value = car.id;
+    opt.textContent = car.name;
+    customCarSelect.appendChild(opt);
+  });
+}
+
+function renderPhraseEditor(carId) {
+  if (!phraseEditorGroup) return;
+  phraseEditorGroup.innerHTML = '';
+  const car = CARS.find(c => c.id === carId);
+  if (!car) return;
+  const original = getCarOriginalState(carId);
+  const phrases = car.phrases || [];
+
+  phrases.forEach((phrase, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'customize-field';
+    wrap.style.marginBottom = '0.4rem';
+
+    const label = document.createElement('label');
+    label.style.fontSize = '0.6rem';
+    label.style.color = '#aaa';
+    label.textContent = `Frase ${i + 1}`;
+
+    const input = document.createElement('textarea');
+    input.style.minHeight = '50px';
+    input.style.fontSize = '0.75rem';
+    input.value = phrase;
+    input.dataset.phraseIndex = i;
+    input.placeholder = original && original.phrases[i] ? original.phrases[i] : 'Frase original...';
+    input.addEventListener('input', () => {
+      car.phrases[i] = input.value;
+    });
+
+    wrap.appendChild(label);
+    wrap.appendChild(input);
+    phraseEditorGroup.appendChild(wrap);
+  });
+}
+
+function loadCarIntoEditor(carId) {
+  const car = CARS.find(c => c.id === carId);
+  if (!car) return;
+  currentEditingCarId = carId;
+  const original = getCarOriginalState(carId);
+
+  customTitle.value = car.letterTitle || '';
+  customBody.value = car.letterBody || '';
+  customTitle.placeholder = original ? original.letterTitle : '';
+  customBody.placeholder = original ? original.letterBody : '';
+
+  updateBodyCount();
+  renderPhraseEditor(carId);
+}
+
+function updateBodyCount() {
+  if (bodyCount && customBody) {
+    bodyCount.textContent = customBody.value.length;
+  }
+}
+
+function openCustomizeModal() {
+  if (!customizeModal) return;
+  populateCarSelect();
+  const startCar = isCustomized && customCarId ? customCarId : (activeCarType || CARS[0].id);
+  customCarSelect.value = startCar;
+  loadCarIntoEditor(startCar);
+  linkResult.classList.remove('show');
+  customizeModal.classList.add('open');
+}
+
+function closeCustomizeModal() {
+  if (customizeModal) customizeModal.classList.remove('open');
+}
+
+function generateCustomLink() {
+  const carId = customCarSelect.value;
+  const car = CARS.find(c => c.id === carId);
+  if (!car) return;
+
+  const params = new URLSearchParams();
+  params.set('custom', 'true');
+  params.set('car', carId);
+  params.set('title', car.letterTitle || '');
+  params.set('body', car.letterBody || '');
+
+  const original = getCarOriginalState(carId);
+  const phrasesChanged = original && JSON.stringify(original.phrases) !== JSON.stringify(car.phrases);
+  if (phrasesChanged && car.phrases && car.phrases.length > 0) {
+    const encoded = encodePhrasesToBase64(car.phrases);
+    if (encoded) params.set('phrases', encoded);
+  }
+
+  const linkFinal = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+  linkUrlBox.textContent = linkFinal;
+  linkResult.classList.add('show');
+  playBlip();
+  return linkFinal;
+}
+
+function resetCurrentCar() {
+  const carId = customCarSelect.value;
+  const car = CARS.find(c => c.id === carId);
+  const original = getCarOriginalState(carId);
+  if (!car || !original) return;
+  car.letterTitle = original.letterTitle;
+  car.letterBody = original.letterBody;
+  car.phrases = JSON.parse(JSON.stringify(original.phrases));
+  loadCarIntoEditor(carId);
+  linkResult.classList.remove('show');
+  playBlip();
+}
+
+async function copyLinkToClipboard() {
+  const text = linkUrlBox.textContent;
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    copyLinkBtn.textContent = '✅ ¡Copiado!';
+    setTimeout(() => { copyLinkBtn.textContent = '📋 Copiar link'; }, 1800);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    copyLinkBtn.textContent = '✅ ¡Copiado!';
+    setTimeout(() => { copyLinkBtn.textContent = '📋 Copiar link'; }, 1800);
+  }
+}
+
+function shareOnWhatsApp() {
+  const text = linkUrlBox.textContent;
+  if (!text) return;
+  const msg = encodeURIComponent(`💝 Te hice un mensaje especial: ${text}`);
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+
+// ========================================================
+// EVENT LISTENERS DE PERSONALIZACIÓN
+// ========================================================
+
+function updateCustomizeFabVisibility() {
+  if (!customizeFab) return;
+  const inGalaxy = phase2 && !phase2.classList.contains('hidden');
+  customizeFab.classList.toggle('hidden', !inGalaxy);
+}
+
+customizeFab.addEventListener('click', () => {
+  initAudio();
+  playBlip();
+  openCustomizeModal();
+});
+
+closeCustomBtn.addEventListener('click', closeCustomizeModal);
+customizeModal.addEventListener('click', (e) => {
+  if (e.target === customizeModal) closeCustomizeModal();
+});
+
+customCarSelect.addEventListener('change', () => {
+  loadCarIntoEditor(customCarSelect.value);
+  linkResult.classList.remove('show');
+});
+
+customTitle.addEventListener('input', () => {
+  const car = CARS.find(c => c.id === customCarSelect.value);
+  if (car) car.letterTitle = customTitle.value;
+});
+
+customBody.addEventListener('input', () => {
+  const car = CARS.find(c => c.id === customCarSelect.value);
+  if (car) car.letterBody = customBody.value;
+  updateBodyCount();
+});
+
+generateLinkBtn.addEventListener('click', generateCustomLink);
+resetCustomBtn.addEventListener('click', resetCurrentCar);
+copyLinkBtn.addEventListener('click', copyLinkToClipboard);
+shareWaBtn.addEventListener('click', shareOnWhatsApp);
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && customizeModal && customizeModal.classList.contains('open')) {
+    closeCustomizeModal();
   }
 });
+
+// ========================================================
+// MOSTRAR BANNER SI VIENE PERSONALIZADO
+// ========================================================
+
+if (isCustomized) {
+  customBanner.classList.remove('hidden');
+  setTimeout(() => {
+    customBanner.classList.add('hidden');
+  }, 8000);
+}
+
+// ========================================================
+// OBSERVER PARA MOSTRAR/OCULTAR EL FAB
+// ========================================================
+
+const phaseObserver = new MutationObserver(() => {
+  updateCustomizeFabVisibility();
+});
+[phase1, phase2, phase3, phase4].forEach(p => {
+  if (p) phaseObserver.observe(p, { attributes: true, attributeFilter: ['class'] });
+});
+
+// ========================================================
+// 🎵 SISTEMA DE MÚSICA (MUTE + VOLUMEN)
+// ========================================================
+
+function updateMusicFabState() {
+  if (!musicFab || !bgMusic) return;
+  const isMuted = bgMusic.muted || bgMusic.volume === 0 || bgMusic.paused;
+  if (isMuted) {
+    musicFab.classList.add('muted');
+    musicFab.querySelector('.music-icon').textContent = '🔇';
+  } else {
+    musicFab.classList.remove('muted');
+    musicFab.querySelector('.music-icon').textContent = '🔊';
+  }
+}
+
+// Inicializar el contenido del icono
+if (musicFab) {
+  musicFab.innerHTML = '<span class="music-icon">🔊</span>';
+}
+
+// Toggle mute/play al hacer clic en el FAB
+musicFab.addEventListener('click', (e) => {
+  e.stopPropagation();
+  initAudio();
+
+  if (!bgMusic) return;
+
+  if (bgMusic.paused) {
+    // Reanudar
+    bgMusic.muted = false;
+    if (bgMusic.volume === 0) {
+      bgMusic.volume = (musicVolumeRange ? musicVolumeRange.value : 60) / 100;
+    }
+    bgMusic.play().then(() => {
+      musicStarted = true;
+      updateMusicFabState();
+    }).catch(() => {});
+  } else if (bgMusic.muted) {
+    // Desmutear
+    bgMusic.muted = false;
+    updateMusicFabState();
+  } else {
+    // Mutear
+    bgMusic.muted = true;
+    updateMusicFabState();
+  }
+
+  // Mostrar/ocultar el slider
+  musicVolumeSlider.classList.toggle('show');
+
+  // Auto-ocultar el slider después de 4 segundos
+  clearTimeout(musicVolumeSlider._hideTimer);
+  musicVolumeSlider._hideTimer = setTimeout(() => {
+    musicVolumeSlider.classList.remove('show');
+  }, 4000);
+});
+
+// Cerrar el slider al hacer clic fuera
+document.addEventListener('click', (e) => {
+  if (musicVolumeSlider &&
+      musicVolumeSlider.classList.contains('show') &&
+      !musicVolumeSlider.contains(e.target) &&
+      e.target !== musicFab) {
+    musicVolumeSlider.classList.remove('show');
+  }
+});
+
+// Control de volumen
+if (musicVolumeRange && bgMusic) {
+  // Volumen inicial
+  bgMusic.volume = musicVolumeRange.value / 100;
+  if (volValue) volValue.textContent = musicVolumeRange.value;
+
+  musicVolumeRange.addEventListener('input', () => {
+    const val = musicVolumeRange.value;
+    bgMusic.volume = val / 100;
+    if (val > 0) bgMusic.muted = false;
+    if (volValue) volValue.textContent = val;
+    updateMusicFabState();
+  });
+
+  // Actualizar también al cambiar
+  musicVolumeRange.addEventListener('change', () => {
+    clearTimeout(musicVolumeSlider._hideTimer);
+    musicVolumeSlider._hideTimer = setTimeout(() => {
+      musicVolumeSlider.classList.remove('show');
+    }, 2000);
+  });
+}
+
+// Sincronizar estado del botón al cargar
+updateMusicFabState();
+
+// Si la música se pausa por algún motivo, actualizar el ícono
+if (bgMusic) {
+  bgMusic.addEventListener('play', updateMusicFabState);
+  bgMusic.addEventListener('pause', updateMusicFabState);
+  bgMusic.addEventListener('volumechange', updateMusicFabState);
+}
+
 </script>
 </body>
 </html>
