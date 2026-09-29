@@ -91,6 +91,22 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
 .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#ff2200,#ff9900,#ffcc00); box-shadow:0 0 12px #ffaa00; transition:width 0.2s; }
 .skip-btn { position:fixed; bottom:20px; right:20px; z-index:50; background:rgba(0,0,0,0.7); color:#ffcc00; border:2px solid #ff7700; font-family:'Orbitron', sans-serif; padding:0.5rem 1rem; border-radius:40px; cursor:pointer; font-size:0.75rem; letter-spacing:0.15em; opacity:0; transition:opacity 0.3s; }
 .skip-btn.show { opacity:1; }
+
+/* 🎵 BOTÓN DE MUTE */
+.mute-btn {
+  position:fixed; bottom:20px; left:20px; z-index:50;
+  background:rgba(0,0,0,0.7); color:#ffcc00;
+  border:2px solid #ff7700; border-radius:50%;
+  width:48px; height:48px; font-size:1.3rem;
+  cursor:pointer; transition:all 0.25s;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 20px rgba(255,119,0,0.5);
+  opacity:0; pointer-events:none;
+}
+.mute-btn.show { opacity:1; pointer-events:auto; }
+.mute-btn:hover { transform:scale(1.1); box-shadow:0 0 30px #ffaa00; }
+.mute-btn.muted { color:#666; border-color:#444; box-shadow:none; }
+
 @media (max-width: 768px) {
   .letter-layout { flex-direction:column; gap:1rem; }
   .letter-card { max-height:none; }
@@ -116,7 +132,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
     <img src="logo.png" alt="Hot Wheels" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
   </div>
   <div class="spinner"></div>
-  <p>CARGANDO MODELOS 3D...</p>
+  <p>CARGANDO MODELOS ...</p>
   <div class="progress-bar-wrap"><div class="progress-bar" id="loadProgress"></div></div>
   <div class="progress-text" id="loadText">0%</div>
 </div>
@@ -171,12 +187,18 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
       </div>
     </div>
     <div class="model-viewer" id="modelViewer">
-      <div class="viewer-label"> HOT WHEELS</div>
+      <div class="viewer-label">HOT WHEELS</div>
     </div>
   </div>
 </div>
 
 <button id="skipBtn" class="skip-btn">Saltar carrera ⏭</button>
+
+<!-- 🎵 MÚSICA DE FONDO -->
+<audio id="bgMusic" loop preload="auto">
+  <source src="musica.mp3" type="audio/mpeg">
+</audio>
+<button id="muteBtn" class="mute-btn" title="Silenciar música">🔊</button>
 
 <script type="importmap">
 {
@@ -227,6 +249,13 @@ let speedFlash, skipBtn, speedLinesBg;
 let modelViewerEl;
 let loaderEl, loadProgressEl, loadTextEl;
 let sceneContainerEl, warpOverlay, warpRays;
+
+// 🎵 MÚSICA
+let bgMusic, muteBtn;
+let musicStarted = false;
+let musicMuted = false;
+const MUSIC_BASE_VOLUME = 0.35;
+let currentMusicVolume = 0;
 
 // ========================================================
 // CARS
@@ -351,6 +380,59 @@ function playWarp() {
   gain.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
   osc.connect(gain).connect(audioCtx.destination);
   osc.start(now); osc.stop(now + 1.3);
+}
+
+// ============ 🎵 MÚSICA DE FONDO ============
+function startMusic() {
+  if (musicStarted || !bgMusic) return;
+  musicStarted = true;
+  bgMusic.volume = 0;
+  bgMusic.play().then(() => {
+    // Fade-in suave
+    const start = performance.now();
+    const duration = 2000;
+    function fadeIn() {
+      const t = Math.min((performance.now() - start) / duration, 1);
+      bgMusic.volume = musicMuted ? 0 : MUSIC_BASE_VOLUME * t;
+      if (t < 1) requestAnimationFrame(fadeIn);
+      else currentMusicVolume = MUSIC_BASE_VOLUME;
+    }
+    fadeIn();
+    if (muteBtn) muteBtn.classList.add('show');
+  }).catch(err => {
+    console.warn('Autoplay bloqueado:', err);
+  });
+}
+
+function updateMusicVolume() {
+  if (!musicStarted || !bgMusic || musicMuted) return;
+  let target = MUSIC_BASE_VOLUME;
+  if (raceActive) {
+    target = MUSIC_BASE_VOLUME * 0.55;          // baja durante la carrera
+  } else if (raceFinished) {
+    target = MUSIC_BASE_VOLUME * 0.95;          // sube al final (carta)
+  } else if (phase4 && !phase4.classList.contains('hidden')) {
+    target = MUSIC_BASE_VOLUME * 0.9;           // carta abierta
+  } else if (phase2 && !phase2.classList.contains('hidden')) {
+    target = MUSIC_BASE_VOLUME * 0.75;          // garage
+  } else if (phase3 && !phase3.classList.contains('hidden')) {
+    target = MUSIC_BASE_VOLUME * 0.6;           // pantalla de carrera
+  }
+  // Suavizado exponencial
+  currentMusicVolume += (target - currentMusicVolume) * 0.03;
+  bgMusic.volume = currentMusicVolume;
+}
+
+function toggleMute() {
+  musicMuted = !musicMuted;
+  if (muteBtn) {
+    muteBtn.classList.toggle('muted', musicMuted);
+    muteBtn.textContent = musicMuted ? '🔇' : '🔊';
+  }
+  if (bgMusic) {
+    bgMusic.volume = musicMuted ? 0 : MUSIC_BASE_VOLUME;
+    if (!musicMuted) currentMusicVolume = MUSIC_BASE_VOLUME;
+  }
 }
 
 // ============ THREE.JS SETUP ============
@@ -487,7 +569,6 @@ const spiralMat = new THREE.PointsMaterial({
 const spiralParticles = new THREE.Points(spiralGeo, spiralMat);
 galaxyCore.add(spiralParticles);
 
-// ============ POLVO ESPACIAL ORBITANDO EL NÚCLEO ============
 const dustCount = 200;
 const dustGeo = new THREE.BufferGeometry();
 const dustPos = new Float32Array(dustCount * 3);
@@ -509,7 +590,6 @@ const dustMat = new THREE.PointsMaterial({
 const dustPoints = new THREE.Points(dustGeo, dustMat);
 galaxyCore.add(dustPoints);
 
-// ============ ESTRELLAS DE FONDO ============
 const starGeo = new THREE.BufferGeometry();
 const starPos = [];
 const starCol = [];
@@ -534,7 +614,6 @@ const starMat = new THREE.PointsMaterial({
 const starField = new THREE.Points(starGeo, starMat);
 scene.add(starField);
 
-// ============ ESTRELLITAS PARPADEANTES DENTRO DE LA GALAXIA ============
 const twinkleCount = 800;
 const twinkleGeo = new THREE.BufferGeometry();
 const twinklePos = new Float32Array(twinkleCount * 3);
@@ -570,7 +649,6 @@ const twinkleMat = new THREE.PointsMaterial({
 const twinkleStars = new THREE.Points(twinkleGeo, twinkleMat);
 galaxyCore.add(twinkleStars);
 
-// ============ RAYOS 3D ============
 const spaceDecorGroup = new THREE.Group();
 scene.add(spaceDecorGroup);
 const rayGroup = new THREE.Group();
@@ -602,7 +680,6 @@ for (let i = 0; i < rayCount; i++) {
   rayData.push(line);
 }
 
-// ============ EMOJIS ESPARCIDOS (Fibonacci esférico) ============
 const emojiSprites = [];
 const emojiColors = ['#ff7700', '#ffcc00', '#00c8ff', '#ff4488', '#00ffaa', '#ff2266', '#aa66ff'];
 function makeEmojiTexture(emoji, glowColor) {
@@ -672,7 +749,6 @@ for (let i = 0; i < EMOJI_COUNT; i++) {
   emojiSprites.push(sprite);
 }
 
-// ============ GALAXIA DE CARRITOS ============
 const galaxyGroup = new THREE.Group();
 scene.add(galaxyGroup);
 const carSprites = [];
@@ -888,9 +964,6 @@ scene.add(carRimLight);
 const carWarmLight = new THREE.PointLight(0xff8800, 0, 30, 2);
 carWarmLight.visible = false;
 scene.add(carWarmLight);
-
-// 🔧 CAMBIO 3: Eliminado carSpotGlow (halo amarillo gigante)
-// (se eliminó por completo: const carSpotGlowTex, carSpotGlow y su adición a la escena)
 
 // ============ INTERACCIÓN ============
 renderer.domElement.addEventListener('pointerdown', (e) => {
@@ -1155,9 +1228,16 @@ function initDOMRefs() {
   sceneContainerEl = document.getElementById('scene-container');
   warpOverlay = document.getElementById('warpOverlay');
   warpRays = document.getElementById('warpRays');
+  bgMusic = document.getElementById('bgMusic');
+  muteBtn = document.getElementById('muteBtn');
 }
 initDOMRefs();
 sceneContainerEl.classList.add('hidden-until-start');
+
+// Botón de mute
+if (muteBtn) {
+  muteBtn.addEventListener('click', toggleMute);
+}
 
 // ============ FUNCIONES DE CARRERA ============
 function removeActiveCar() {
@@ -1166,7 +1246,6 @@ function removeActiveCar() {
   carKeyLight.visible = false;
   carRimLight.visible = false;
   carWarmLight.visible = false;
-  // carSpotGlow eliminado
   scene.fog = new THREE.FogExp2(0x03030a, 0.0065);
 }
 
@@ -1212,17 +1291,13 @@ function startRace(carId) {
   carGroup.position.set(0, 0.1, 0);
   carGroup.rotation.set(0, 0, 0);
 
-  // 🔥 Quitar la niebla durante la carrera
   scene.fog = null;
 
-  // 🔧 CAMBIO 1: La lluvia sigue al auto con rainGroup.position.set
   rainGroup.visible = true;
   carKeyLight.visible = true;
   carRimLight.visible = true;
   carWarmLight.visible = true;
 
-  // 🔧 CAMBIO 2: Reset de lluvia en coordenadas LOCALES (centradas en 0,0,0)
-  // El rainGroup seguirá al auto, así que las gotas se colocan alrededor del origen local.
   const rp = rainGeo.attributes.position.array;
   for (let i = 0; i < RAIN_COUNT; i++) {
     rp[i*3]   = (Math.random() - 0.5) * RAIN_AREA_X;
@@ -1242,7 +1317,6 @@ function startRace(carId) {
   }
   rainStreakGeo.attributes.position.needsUpdate = true;
 
-  // Posicionar el grupo de lluvia en el auto
   rainGroup.position.copy(carGroup.position);
 
   phase1.classList.add('hidden');
@@ -1383,10 +1457,8 @@ function animate() {
 
   // 🌧️ LLUVIA ESPACIAL
   if (rainGroup.visible && activeCar) {
-    // 🔧 CAMBIO 1: El grupo de lluvia sigue al auto
     rainGroup.position.copy(activeCar.group.position);
 
-    const carPos = activeCar.group.position;
     const rp = rainGeo.attributes.position.array;
     const halfX = RAIN_AREA_X * 0.5;
     const halfZ = RAIN_AREA_Z * 0.5;
@@ -1397,7 +1469,6 @@ function animate() {
       rp[i*3+1] -= v.y * dt;
       rp[i*3+2] += v.z * dt;
 
-      // 🔧 CAMBIO 2: Reset en coordenadas LOCALES (alrededor del origen local)
       const tooFar = Math.abs(rp[i*3]) > halfX ||
                      Math.abs(rp[i*3+2]) > halfZ ||
                      rp[i*3+1] < -10;
@@ -1416,7 +1487,6 @@ function animate() {
       sp[i*6+1] -= s.speed * dt;
       sp[i*6+4] = sp[i*6+1] - s.len;
 
-      // 🔧 CAMBIO 2: Reset en coordenadas LOCALES
       const tooFarS = Math.abs(sp[i*6]) > halfX ||
                       Math.abs(sp[i*6+2]) > halfZ ||
                       sp[i*6+1] < -10;
@@ -1433,7 +1503,6 @@ function animate() {
 
     rainMat.opacity = 0.85 + Math.sin(time * 8) * 0.15 + (Math.random() > 0.985 ? 0.15 : 0);
 
-    // 💡 LUCES DEL AUTO (se mantienen en coordenadas de MUNDO para iluminar bien)
     const cp = activeCar.group.position;
     carKeyLight.position.set(cp.x + 3, cp.y + 6, cp.z + 4);
     carKeyLight.intensity = 2.5;
@@ -1492,7 +1561,6 @@ function animate() {
     activeCar.wheels.forEach(w => { w.rotation.x += dt * 8; });
     hudSpeed.textContent = '0 KM/H';
 
-    // 🔧 CAMBIO 5: Luces más fuertes al llegar (3.0 + 3.0 + 2.0)
     const cp = activeCar.group.position;
     carKeyLight.position.set(cp.x + 3, cp.y + 6, cp.z + 4);
     carKeyLight.intensity = 3.0;
@@ -1530,8 +1598,10 @@ function animate() {
     }
   });
 
-  // 🔧 CAMBIO 4: Bloom subido a 0.75 durante/después de la carrera
   bloom.strength = raceActive ? 0.75 : 1.0;
+
+  // 🎵 Volumen dinámico de la música
+  updateMusicVolume();
 
   if (controls.enabled) controls.update();
   composer.render();
@@ -1562,6 +1632,7 @@ setTimeout(() => {
 // ============ EVENTOS ============
 startBtn.addEventListener('click', () => {
   initAudio();
+  startMusic();          // 🎵 Empieza la música
   playWarp();
   warpOverlay.classList.add('active');
   warpRays.classList.add('active');
