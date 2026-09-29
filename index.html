@@ -1509,7 +1509,8 @@ fog: false
 const rainStreaks = new THREE.LineSegments(rainStreakGeo, rainStreakMat);
 rainGroup.add(rainStreaks);
 
-// ============ LUCES DEL AUTO ============
+// ============ LUCES DEL AUTO (DESACTIVADAS) ============
+// 🔕 Estas luces están desactivadas para que se aprecie bien el modelo del coche
 
 const carKeyLight = new THREE.PointLight(0xffffff, 0, 40, 2);
 carKeyLight.visible = false;
@@ -1523,16 +1524,9 @@ const carWarmLight = new THREE.PointLight(0xff8800, 0, 30, 2);
 carWarmLight.visible = false;
 scene.add(carWarmLight);
 
-const carSpotGlowTex = makeRadialGlowTexture(255, 220, 150);
-const carSpotGlow = new THREE.Sprite(new THREE.SpriteMaterial({
-map: carSpotGlowTex,
-transparent: true,
-blending: THREE.AdditiveBlending,
-depthWrite: false,
-opacity: 0
-}));
-carSpotGlow.scale.set(12, 12, 1);
-scene.add(carSpotGlow);
+// 🔕 carSpotGlow ELIMINADO COMPLETAMENTE (era el resplandor dorado alrededor del coche)
+// Se mantiene la variable como un objeto vacío para no romper referencias
+const carSpotGlow = { material: { opacity: 0 } };
 
 // ============ INTERACCIÓN ============
 
@@ -1919,9 +1913,10 @@ carGroup.rotation.set(0, 0, 0);
 scene.fog = null;
 
 rainGroup.visible = true;
-carKeyLight.visible = true;
-carRimLight.visible = true;
-carWarmLight.visible = true;
+// 🔕 Luces del auto desactivadas (el carSpotGlow ya no existe)
+carKeyLight.visible = false;
+carRimLight.visible = false;
+carWarmLight.visible = false;
 
 const carZ = carGroup.position.z;
 const rp = rainGeo.attributes.position.array;
@@ -2087,51 +2082,48 @@ const rp = rainGeo.attributes.position.array;
 const halfX = RAIN_AREA_X * 0.5;
 const halfZ = RAIN_AREA_Z * 0.5;
 
+// 🌧️ Gotas: caen SIEMPRE con respecto al coche para que lo acompañen
 for (let i = 0; i < RAIN_COUNT; i++) {
 const v = rainVelocities[i];
 rp[i*3] += v.x * dt;
 rp[i*3+1] -= v.y * dt;
 rp[i*3+2] += v.z * dt;
+
 const tooFar = Math.abs(rp[i*3] - carPos.x) > halfX ||
 Math.abs(rp[i*3+2] - carPos.z) > halfZ ||
-rp[i*3+1] < carPos.y - 10;
+rp[i*3+1] < carPos.y - 15;
 if (tooFar) {
 rp[i*3] = carPos.x + (Math.random() - 0.5) * RAIN_AREA_X;
-rp[i*3+1] = carPos.y + RAIN_AREA_Y * (0.5 + Math.random() * 0.5);
+rp[i*3+1] = carPos.y + RAIN_AREA_Y * (0.6 + Math.random() * 0.4);
 rp[i*3+2] = carPos.z + (Math.random() - 0.5) * RAIN_AREA_Z;
 }
 }
 rainGeo.attributes.position.needsUpdate = true;
 
+// 🌧️ Rachas: mismo comportamiento
 const sp = rainStreakGeo.attributes.position.array;
 for (let i = 0; i < rainStreakCount; i++) {
 const s = streakData[i];
 sp[i*6+1] -= s.speed * dt;
 sp[i*6+4] = sp[i*6+1] - s.len;
+
 const tooFarS = Math.abs(sp[i*6] - carPos.x) > halfX ||
 Math.abs(sp[i*6+2] - carPos.z) > halfZ ||
-sp[i*6+1] < carPos.y - 10;
+sp[i*6+1] < carPos.y - 15;
 if (tooFarS) {
 const nx = carPos.x + (Math.random() - 0.5) * RAIN_AREA_X;
 const nz = carPos.z + (Math.random() - 0.5) * RAIN_AREA_Z;
-const ny = carPos.y + RAIN_AREA_Y * (0.5 + Math.random() * 0.5);
+const ny = carPos.y + RAIN_AREA_Y * (0.6 + Math.random() * 0.4);
 sp[i*6] = nx; sp[i*6+1] = ny; sp[i*6+2] = nz;
 sp[i*6+3] = nx; sp[i*6+4] = ny - s.len; sp[i*6+5] = nz;
 }
 }
 rainStreakGeo.attributes.position.needsUpdate = true;
 
+// Flash suave de tormenta
 rainMat.opacity = 0.85 + Math.sin(time * 8) * 0.15 + (Math.random() > 0.985 ? 0.15 : 0);
 
-const cp = activeCar.group.position;
-carKeyLight.position.set(cp.x + 3, cp.y + 6, cp.z + 4);
-carKeyLight.intensity = 2.5;
-carRimLight.position.set(cp.x - 4, cp.y + 2, cp.z - 3);
-carRimLight.intensity = 2.0;
-carWarmLight.position.set(cp.x + 3, cp.y + 1, cp.z - 4);
-carWarmLight.intensity = 1.5;
-carSpotGlow.position.set(cp.x, cp.y + 0.5, cp.z + 2);
-carSpotGlow.material.opacity = 0.3 + Math.sin(time * 4) * 0.08;
+// 🔕 SIN LUCES DEL COCHE (eliminadas para no interferir con la visibilidad)
 }
 
 if (activeCar && raceActive) {
@@ -2181,15 +2173,7 @@ activeCar.group.position.y = 0.1 + Math.sin(time * 20) * 0.03;
 activeCar.group.rotation.y += dt * 0.8;
 activeCar.wheels.forEach(w => { w.rotation.x += dt * 8; });
 hudSpeed.textContent = '0 KM/H';
-const cp = activeCar.group.position;
-carKeyLight.position.set(cp.x + 3, cp.y + 6, cp.z + 4);
-carKeyLight.intensity = 2.0;
-carRimLight.position.set(cp.x - 4, cp.y + 2, cp.z - 3);
-carRimLight.intensity = 1.5;
-carWarmLight.position.set(cp.x + 3, cp.y + 1, cp.z - 4);
-carWarmLight.intensity = 1.2;
-carSpotGlow.position.set(cp.x, cp.y + 0.5, cp.z + 2);
-carSpotGlow.material.opacity = 0.22 + Math.sin(time * 3) * 0.06;
+// 🔕 Luces del auto siguen desactivadas
 }
 
 if (activeCar && phase3 && !phase3.classList.contains('hidden')) {
@@ -2220,7 +2204,8 @@ spark.scale.setScalar(Math.max(0.15, s));
 }
 });
 
-bloom.strength = raceActive ? (0.55 + Math.sin(time * 6) * 0.1) : 1.0;
+// 🔕 BLOOM REDUCIDO durante la carrera para no brillar tanto alrededor del coche
+bloom.strength = raceActive ? (0.35 + Math.sin(time * 6) * 0.05) : 1.0;
 if (controls.enabled) controls.update();
 composer.render();
 }
@@ -2617,7 +2602,6 @@ musicFab.addEventListener('click', (e) => {
   if (!bgMusic) return;
 
   if (bgMusic.paused) {
-    // Reanudar
     bgMusic.muted = false;
     if (bgMusic.volume === 0) {
       bgMusic.volume = (musicVolumeRange ? musicVolumeRange.value : 60) / 100;
@@ -2627,26 +2611,21 @@ musicFab.addEventListener('click', (e) => {
       updateMusicFabState();
     }).catch(() => {});
   } else if (bgMusic.muted) {
-    // Desmutear
     bgMusic.muted = false;
     updateMusicFabState();
   } else {
-    // Mutear
     bgMusic.muted = true;
     updateMusicFabState();
   }
 
-  // Mostrar/ocultar el slider
   musicVolumeSlider.classList.toggle('show');
 
-  // Auto-ocultar el slider después de 4 segundos
   clearTimeout(musicVolumeSlider._hideTimer);
   musicVolumeSlider._hideTimer = setTimeout(() => {
     musicVolumeSlider.classList.remove('show');
   }, 4000);
 });
 
-// Cerrar el slider al hacer clic fuera
 document.addEventListener('click', (e) => {
   if (musicVolumeSlider &&
       musicVolumeSlider.classList.contains('show') &&
@@ -2656,9 +2635,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Control de volumen
 if (musicVolumeRange && bgMusic) {
-  // Volumen inicial
   bgMusic.volume = musicVolumeRange.value / 100;
   if (volValue) volValue.textContent = musicVolumeRange.value;
 
@@ -2670,7 +2647,6 @@ if (musicVolumeRange && bgMusic) {
     updateMusicFabState();
   });
 
-  // Actualizar también al cambiar
   musicVolumeRange.addEventListener('change', () => {
     clearTimeout(musicVolumeSlider._hideTimer);
     musicVolumeSlider._hideTimer = setTimeout(() => {
@@ -2679,10 +2655,8 @@ if (musicVolumeRange && bgMusic) {
   });
 }
 
-// Sincronizar estado del botón al cargar
 updateMusicFabState();
 
-// Si la música se pausa por algún motivo, actualizar el ícono
 if (bgMusic) {
   bgMusic.addEventListener('play', updateMusicFabState);
   bgMusic.addEventListener('pause', updateMusicFabState);
