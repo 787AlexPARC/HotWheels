@@ -218,6 +218,9 @@ to { box-shadow:0 0 45px #ffcc00, 0 0 90px #ff6600, inset 0 0 25px rgba(255,255,
 
 <!-- Vercel Web Analytics -->
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+
+<!-- 🔥 LZ-String para comprimir los links personalizados -->
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 </head>
 <body>
 
@@ -518,37 +521,49 @@ let customCarId = null;
 if (urlParams.has('custom')) {
     isCustomized = true;
 
-    // === NUEVO FORMATO: todo empaquetado en Base64 ===
+    // === NUEVO FORMATO: todo comprimido en un solo parámetro 'data' con LZ-String ===
     const dataParam = urlParams.get('data');
 
     if (dataParam) {
+        let payload = null;
+
+        // Intento 1: descomprimir con LZ-String (formato nuevo)
         try {
-            const decoded = decodeURIComponent(escape(atob(dataParam)));
-            const payload = JSON.parse(decoded);
-
-            if (payload && Array.isArray(payload.cars)) {
-                payload.cars.forEach(customCar => {
-                    const carToModify = CARS.find(c => c.id === customCar.id);
-                    if (!carToModify) return;
-
-                    if (typeof customCar.title === 'string') carToModify.letterTitle = customCar.title;
-                    if (typeof customCar.body === 'string') carToModify.letterBody = customCar.body;
-                    if (Array.isArray(customCar.phrases) && customCar.phrases.length > 0) {
-                        carToModify.phrases = customCar.phrases;
-                    }
-                });
-
-                // Carrito por defecto (el que se mostrará primero)
-                if (payload.defaultCar) {
-                    activeCarType = payload.defaultCar;
-                    customCarId = payload.defaultCar;
-                }
-            }
+            const json = LZString.decompressFromEncodedURIComponent(dataParam);
+            if (json) payload = JSON.parse(json);
         } catch (err) {
-            console.warn('No se pudo decodificar la personalización:', err);
+            console.warn('LZ-String falló, probando Base64 clásico…', err);
+        }
+
+        // Intento 2: compatibilidad con links viejos (Base64 de JSON)
+        if (!payload) {
+            try {
+                const decoded = decodeURIComponent(escape(atob(dataParam)));
+                payload = JSON.parse(decoded);
+            } catch (err) {
+                console.warn('No se pudo decodificar la personalización:', err);
+            }
+        }
+
+        if (payload && Array.isArray(payload.cars)) {
+            payload.cars.forEach(customCar => {
+                const carToModify = CARS.find(c => c.id === customCar.id);
+                if (!carToModify) return;
+
+                if (typeof customCar.title === 'string') carToModify.letterTitle = customCar.title;
+                if (typeof customCar.body === 'string') carToModify.letterBody = customCar.body;
+                if (Array.isArray(customCar.phrases) && customCar.phrases.length > 0) {
+                    carToModify.phrases = customCar.phrases;
+                }
+            });
+
+            if (payload.defaultCar) {
+                activeCarType = payload.defaultCar;
+                customCarId = payload.defaultCar;
+            }
         }
     } else {
-        // === COMPATIBILIDAD CON FORMATO ANTIGUO (carrito único) ===
+        // === COMPATIBILIDAD CON FORMATO ANTIGUÍSIMO (carrito único por parámetros) ===
         customCarId = urlParams.get('car');
         const carToModify = CARS.find(c => c.id === customCarId);
 
@@ -2057,7 +2072,8 @@ function closeCustomizeModal() {
 }
 
 // ========================================================
-// 🔗 GENERACIÓN DEL LINK (guarda TODOS los carritos modificados)
+// 🔗 GENERACIÓN DEL LINK con LZ-String
+// Guarda TODOS los carritos modificados en un solo parámetro 'data'
 // ========================================================
 function generateCustomLink() {
     // Detectar todos los carritos que fueron modificados respecto al original
@@ -2086,25 +2102,25 @@ function generateCustomLink() {
         return;
     }
 
-    // Empaquetar todo en un JSON -> Base64
+    // Empaquetar todo en un JSON -> comprimir con LZ-String (URL-safe)
     const payload = {
         cars: modifiedCars,
         defaultCar: customCarSelect.value
     };
 
-    let encoded = '';
+    let compressed = '';
     try {
         const json = JSON.stringify(payload);
-        encoded = btoa(unescape(encodeURIComponent(json)));
+        compressed = LZString.compressToEncodedURIComponent(json);
     } catch (e) {
-        console.error('Error codificando personalización:', e);
+        console.error('Error comprimiendo personalización:', e);
         alert('Error al generar el link. Intenta de nuevo.');
         return;
     }
 
     const params = new URLSearchParams();
     params.set('custom', 'true');
-    params.set('data', encoded);
+    params.set('data', compressed);
 
     const linkFinal = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 
