@@ -188,6 +188,7 @@ to { box-shadow:0 0 45px #ffcc00, 0 0 90px #ff6600, inset 0 0 25px rgba(255,255,
 .customize-actions button { font-family:'Orbitron', sans-serif; font-weight:700; font-size:0.8rem; letter-spacing:0.1em; padding:0.8rem 1.6rem; border-radius:50px; cursor:pointer; transition:all 0.25s; border:2px solid; }
 .btn-generate { background:linear-gradient(180deg, #ff8800, #cc0000); border-color:#ffcc00; color:#fff; text-shadow:0 2px 0 #7a0000; box-shadow:0 0 25px #ff6600; }
 .btn-generate:hover { transform:translateY(-3px) scale(1.03); box-shadow:0 0 45px #ffaa00; }
+.btn-generate:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
 .btn-reset { background:transparent; border-color:#666; color:#aaa; }
 .btn-reset:hover { border-color:#ff7700; color:#ff7700; }
 .btn-close-panel { background:transparent; border-color:#00c8ff; color:#00e0ff; }
@@ -219,7 +220,7 @@ to { box-shadow:0 0 45px #ffcc00, 0 0 90px #ff6600, inset 0 0 25px rgba(255,255,
 <!-- Vercel Web Analytics -->
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 
-<!-- 🔥 LZ-String para comprimir los links personalizados -->
+<!-- 🔥 LZ-String (para compatibilidad con links viejos) -->
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 </head>
 <body>
@@ -518,86 +519,83 @@ const urlParams = new URLSearchParams(window.location.search);
 let isCustomized = false;
 let customCarId = null;
 
-if (urlParams.has('custom')) {
+// === NUEVO FORMATO CORTO: ?c=XXXX ===
+const shortId = urlParams.get('c');
+
+if (shortId) {
     isCustomized = true;
-
-    // === NUEVO FORMATO: todo comprimido en un solo parámetro 'data' con LZ-String ===
+    try {
+        const resp = await fetch(`/api/load?id=${encodeURIComponent(shortId)}`);
+        if (resp.ok) {
+            const payload = await resp.json();
+            if (payload && Array.isArray(payload.cars)) {
+                payload.cars.forEach(customCar => {
+                    const carToModify = CARS.find(c => c.id === customCar.id);
+                    if (!carToModify) return;
+                    if (typeof customCar.title === 'string') carToModify.letterTitle = customCar.title;
+                    if (typeof customCar.body === 'string') carToModify.letterBody = customCar.body;
+                    if (Array.isArray(customCar.phrases) && customCar.phrases.length > 0) {
+                        carToModify.phrases = customCar.phrases;
+                    }
+                });
+                if (payload.defaultCar) {
+                    activeCarType = payload.defaultCar;
+                    customCarId = payload.defaultCar;
+                }
+            }
+        } else {
+            console.warn('Link no encontrado o expirado');
+        }
+    } catch (err) {
+        console.warn('No se pudo cargar el link corto:', err);
+    }
+} else if (urlParams.has('custom')) {
+    // === COMPATIBILIDAD CON LINKS VIEJOS ===
     const dataParam = urlParams.get('data');
-
     if (dataParam) {
         let payload = null;
-
-        // Intento 1: descomprimir con LZ-String (formato nuevo)
         try {
             const json = LZString.decompressFromEncodedURIComponent(dataParam);
             if (json) payload = JSON.parse(json);
-        } catch (err) {
-            console.warn('LZ-String falló, probando Base64 clásico…', err);
-        }
-
-        // Intento 2: compatibilidad con links viejos (Base64 de JSON)
+        } catch (err) {}
         if (!payload) {
             try {
                 const decoded = decodeURIComponent(escape(atob(dataParam)));
                 payload = JSON.parse(decoded);
-            } catch (err) {
-                console.warn('No se pudo decodificar la personalización:', err);
-            }
+            } catch (err) {}
         }
-
         if (payload && Array.isArray(payload.cars)) {
             payload.cars.forEach(customCar => {
                 const carToModify = CARS.find(c => c.id === customCar.id);
                 if (!carToModify) return;
-
                 if (typeof customCar.title === 'string') carToModify.letterTitle = customCar.title;
                 if (typeof customCar.body === 'string') carToModify.letterBody = customCar.body;
                 if (Array.isArray(customCar.phrases) && customCar.phrases.length > 0) {
                     carToModify.phrases = customCar.phrases;
                 }
             });
-
             if (payload.defaultCar) {
                 activeCarType = payload.defaultCar;
                 customCarId = payload.defaultCar;
             }
         }
     } else {
-        // === COMPATIBILIDAD CON FORMATO ANTIGUÍSIMO (carrito único por parámetros) ===
         customCarId = urlParams.get('car');
         const carToModify = CARS.find(c => c.id === customCarId);
-
         if (carToModify) {
-            const customTitleParam = urlParams.get('title');
-            const customBodyParam = urlParams.get('body');
-            const customPhrasesRaw = urlParams.get('phrases');
-
-            if (customTitleParam) carToModify.letterTitle = customTitleParam;
-            if (customBodyParam) carToModify.letterBody = customBodyParam;
-
-            if (customPhrasesRaw) {
+            const t = urlParams.get('title');
+            const b = urlParams.get('body');
+            const p = urlParams.get('phrases');
+            if (t) carToModify.letterTitle = t;
+            if (b) carToModify.letterBody = b;
+            if (p) {
                 try {
-                    const decoded = decodeURIComponent(escape(atob(customPhrasesRaw)));
-                    const arr = JSON.parse(decoded);
-                    if (Array.isArray(arr) && arr.length > 0) {
-                        carToModify.phrases = arr;
-                    }
-                } catch (err) {
-                    console.warn('No se pudieron decodificar las frases personalizadas:', err);
-                }
+                    const arr = JSON.parse(decodeURIComponent(escape(atob(p))));
+                    if (Array.isArray(arr)) carToModify.phrases = arr;
+                } catch (err) {}
             }
-
             activeCarType = customCarId;
         }
-    }
-}
-
-function encodePhrasesToBase64(phrasesArray) {
-    try {
-        const json = JSON.stringify(phrasesArray);
-        return btoa(unescape(encodeURIComponent(json)));
-    } catch (e) {
-        return '';
     }
 }
 
@@ -1501,7 +1499,6 @@ function initDOMRefs() {
     warpOverlay = document.getElementById('warpOverlay');
     warpRays = document.getElementById('warpRays');
 
-    // Personalización
     customizeFab = document.getElementById('customizeFab');
     customizeModal = document.getElementById('customizeModal');
     customCarSelect = document.getElementById('customCarSelect');
@@ -1518,7 +1515,6 @@ function initDOMRefs() {
     customBanner = document.getElementById('customBanner');
     bodyCount = document.getElementById('bodyCount');
 
-    // Música
     bgMusic = document.getElementById('bgMusic');
     musicFab = document.getElementById('musicFab');
     musicVolumeSlider = document.getElementById('musicVolumeSlider');
@@ -2072,21 +2068,16 @@ function closeCustomizeModal() {
 }
 
 // ========================================================
-// 🔗 GENERACIÓN DEL LINK con LZ-String
-// Guarda TODOS los carritos modificados en un solo parámetro 'data'
+// 🔗 GENERACIÓN DEL LINK (Vercel KV - link corto)
 // ========================================================
-function generateCustomLink() {
-    // Detectar todos los carritos que fueron modificados respecto al original
+async function generateCustomLink() {
     const modifiedCars = [];
-
     CARS.forEach(car => {
         const original = getCarOriginalState(car.id);
         if (!original) return;
-
         const titleChanged = car.letterTitle !== original.letterTitle;
         const bodyChanged = car.letterBody !== original.letterBody;
         const phrasesChanged = JSON.stringify(car.phrases) !== JSON.stringify(original.phrases);
-
         if (titleChanged || bodyChanged || phrasesChanged) {
             modifiedCars.push({
                 id: car.id,
@@ -2102,33 +2093,34 @@ function generateCustomLink() {
         return;
     }
 
-    // Empaquetar todo en un JSON -> comprimir con LZ-String (URL-safe)
-    const payload = {
-        cars: modifiedCars,
-        defaultCar: customCarSelect.value
-    };
+    generateLinkBtn.disabled = true;
+    generateLinkBtn.textContent = '⏳ Guardando...';
 
-    let compressed = '';
     try {
-        const json = JSON.stringify(payload);
-        compressed = LZString.compressToEncodedURIComponent(json);
-    } catch (e) {
-        console.error('Error comprimiendo personalización:', e);
-        alert('Error al generar el link. Intenta de nuevo.');
-        return;
+        const response = await fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cars: modifiedCars,
+                defaultCar: customCarSelect.value
+            })
+        });
+
+        if (!response.ok) throw new Error('Error del servidor');
+        const data = await response.json();
+        if (!data.id) throw new Error('No se recibió ID');
+
+        const linkFinal = `${window.location.origin}${window.location.pathname}?c=${data.id}`;
+        linkUrlBox.textContent = linkFinal;
+        linkResult.classList.add('show');
+        playBlip();
+    } catch (err) {
+        console.error('Error generando link:', err);
+        alert('No se pudo generar el link. Revisa tu conexión e intenta de nuevo.');
+    } finally {
+        generateLinkBtn.disabled = false;
+        generateLinkBtn.textContent = '🔗 Generar link';
     }
-
-    const params = new URLSearchParams();
-    params.set('custom', 'true');
-    params.set('data', compressed);
-
-    const linkFinal = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-
-    linkUrlBox.textContent = linkFinal;
-    linkResult.classList.add('show');
-    playBlip();
-
-    return linkFinal;
 }
 
 function resetCurrentCar() {
